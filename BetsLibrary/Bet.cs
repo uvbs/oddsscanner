@@ -9,17 +9,22 @@ namespace BetsLibrary
     public abstract class Bet
     {
         public double Odds { get; protected set; }
+        public Bookmaker Bookmaker { get; protected set; }
+        public MatchName MatchName { get; protected set; }
+        public string BetUrl { get; protected set; }
+        public string JavaScriptSelectorCode { get; protected set; }
+        public Sport Sport { get; protected set; }
 
         public void ChangeOdds(double newOdds)
         {
             this.Odds = newOdds;
         }
+        
+
     }
 
     public enum ResultBetType
     {
-        P1,
-        P2,
         First,
         Draw,
         Second,
@@ -31,18 +36,24 @@ namespace BetsLibrary
     public class ResultBet : Bet
     {
         public ResultBetType ResultBetType { get; private set; }
-        public Time Time { get; protected set; }
+        public string Time { get; protected set; }
 
-        public ResultBet(ResultBetType ResultBetType, Time time, double odds)
+
+        public ResultBet(ResultBetType ResultBetType, string Time, double Odds, MatchName MatchName, string BetUrl, string JavaScriptSelectorCode, Sport Sport, Bookmaker Bookmaker)
         {
             this.ResultBetType = ResultBetType;
-            this.Time = time;
-            this.Odds = odds;
+            this.Time = Time;
+            this.Odds = Odds;
+            this.MatchName = MatchName;
+            this.BetUrl = BetUrl;
+            this.JavaScriptSelectorCode = JavaScriptSelectorCode;
+            this.Sport = Sport;
+            this.Bookmaker = Bookmaker;
         }
 
         public override int GetHashCode()
         {
-            return ResultBetType.GetHashCode() ^ Time.GetHashCode();
+            return ResultBetType.GetHashCode() ^ Time.GetHashCode() ^ MatchName.GetHashCode();
         }
 
         public override bool Equals(object obj)
@@ -56,7 +67,12 @@ namespace BetsLibrary
 
         public bool Equals(ResultBet bet)
         {
-            return bet.Time == Time && bet.ResultBetType == ResultBetType;
+            return bet.Time == Time && bet.ResultBetType == ResultBetType && bet.MatchName == MatchName && bet.Sport == Sport;
+        }
+
+        public override string ToString()
+        {
+            return String.Format("{0} {1}", Time, ResultBetType);
         }
 
     }
@@ -70,20 +86,25 @@ namespace BetsLibrary
     public class HandicapBet : Bet
     {
         public HandicapBetType HandicapBetType { get; private set; }
-        public Time Time { get; protected set; }
+        public string Time { get; protected set; }
         public double HandicapValue { get; private set; }
 
-        public HandicapBet(HandicapBetType handicapBetType, double HandicapValue, Time time, double odds)
+        public HandicapBet(HandicapBetType handicapBetType, double HandicapValue, string Time, double Odds, MatchName MatchName, string BetUrl, string JavaScriptSelectorCode, Sport Sport, Bookmaker Bookmaker)
         {
-            this.Odds = odds;
+            this.Odds = Odds;
             this.HandicapBetType = handicapBetType;
             this.HandicapValue = HandicapValue;
-            this.Time = time;
+            this.Time = Time;
+            this.MatchName = MatchName;
+            this.BetUrl = BetUrl;
+            this.JavaScriptSelectorCode = JavaScriptSelectorCode;
+            this.Sport = Sport;
+            this.Bookmaker = Bookmaker;
         }
 
         public override int GetHashCode()
         {
-            return HandicapBetType.GetHashCode() ^ Time.GetHashCode();
+            return HandicapBetType.GetHashCode() ^ Time.GetHashCode() ^ MatchName.GetHashCode();
         }
 
         public override bool Equals(object obj)
@@ -97,9 +118,13 @@ namespace BetsLibrary
 
         public bool Equals(HandicapBet bet)
         {
-            return bet.Time == Time && bet.HandicapBetType == HandicapBetType && bet.HandicapValue == HandicapValue;
+            return bet.Time == Time && bet.HandicapBetType == HandicapBetType && bet.HandicapValue == HandicapValue && bet.MatchName == MatchName && bet.Sport == Sport;
         }
 
+        public override string ToString()
+        {
+            return String.Format("{0} {1} ({2})", Time, HandicapBetType, HandicapValue);
+        }
     }
 
     public enum TotalBetType
@@ -109,24 +134,29 @@ namespace BetsLibrary
     }
 
     public class TotalBet : Bet
-    {   
+    {
         public TotalBetType TotalBetType { get; private set; }
-        public Time Time { get; protected set; }
+        public string Time { get; protected set; }
         public double TotalValue { get; private set; }
         public Team Team { get; private set; }
 
-        public TotalBet(TotalBetType TotalBetType, double TotalValue, Time time, Team team, double odds)
+        public TotalBet(TotalBetType TotalBetType, double TotalValue, string Time, Team Team, double Odds, MatchName MatchName, string BetUrl, string JavaScriptSelectorCode, Sport Sport, Bookmaker Bookmaker)
         {
-            this.Odds = odds;
+            this.Odds = Odds;
             this.TotalBetType = TotalBetType;
             this.TotalValue = TotalValue;
-            this.Time = time;
-            this.Team = team;
+            this.Time = Time;
+            this.Team = Team;
+            this.MatchName = MatchName;
+            this.BetUrl = BetUrl;
+            this.JavaScriptSelectorCode = JavaScriptSelectorCode;
+            this.Sport = Sport;
+            this.Bookmaker = Bookmaker;
         }
 
         public override int GetHashCode()
         {
-            return TotalBetType.GetHashCode() ^ Time.GetHashCode() ^ Team.GetHashCode();
+            return TotalBetType.GetHashCode() ^ Time.GetHashCode() ^ Team.GetHashCode() ^ MatchName.GetHashCode();
         }
 
         public override bool Equals(object obj)
@@ -140,18 +170,25 @@ namespace BetsLibrary
 
         public bool Equals(TotalBet bet)
         {
-            return bet.Time == Time && bet.TotalBetType == TotalBetType && bet.TotalValue == TotalValue && bet.Team == Team;
+            return bet.Time == Time && bet.TotalBetType == TotalBetType && bet.TotalValue == TotalValue && bet.Team == Team && bet.MatchName == MatchName && bet.Sport == Sport;
+        }
+
+        public override string ToString()
+        {
+            if (Team == Team.All)
+                return String.Format("{0} {1} ({2})", Time, TotalBetType, TotalValue);
+            else
+            if (Team == Team.First)
+                return String.Format("{0} {3} {1} ({2})", Time, TotalBetType, TotalValue, MatchName.FirstTeam);
+            else
+            if (Team == Team.Second)
+                return String.Format("{0} {3} {1} ({2})", Time, TotalBetType, TotalValue, MatchName.SecondTeam);
+            else
+                return null;
+
         }
     }
 
-    public enum Time
-    {
-        First,
-        Second,
-        Third,
-        Fourth,
-        AllGame
-    }
 
     public enum Team
     {
@@ -159,8 +196,4 @@ namespace BetsLibrary
         Second,
         All
     }
-
-    
-
-    
 }

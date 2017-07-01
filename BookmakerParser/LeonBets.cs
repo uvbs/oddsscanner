@@ -1,0 +1,387 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using BetsLibrary;
+using CefSharp.OffScreen;
+using CefSharp;
+using HtmlAgilityPack;
+
+
+namespace BookmakerParser
+{
+    public class LeonBets : BetsLibrary.BookmakerParser
+    {
+        private string MatchListUrl = "https://mobile.leonbets.net/mobile/#liveEvents";
+
+        private int countMatches = 0;
+        private const int MaximumMatches = 20;
+
+        private Dictionary<string, ChromiumWebBrowser> browserDict = new Dictionary<string, ChromiumWebBrowser>();
+        List<string> activeMatchList = new List<string>();
+        private ChromiumWebBrowser matchListBrowser;
+        private const Bookmaker Maker = Bookmaker.Leon;
+        string JavaSelectCode = "Java";
+        string[] type_of_sport = { "Football", "Basketball", "Tennis", "Voleyball" };
+        public LeonBets()
+        {
+
+        }
+
+        private void LoadMatchListPages()
+        {
+            matchListBrowser = new ChromiumWebBrowser(MatchListUrl);
+        }
+
+        public override void Parse()
+        {
+            if (matchListBrowser == null)
+                LoadMatchListPages();
+
+            if (!matchListBrowser.IsBrowserInitialized || matchListBrowser.IsLoading) return;
+
+            int index = 0;
+            activeMatchList = new List<string>();
+            while (activeMatchList.Count < MaximumMatches && index < type_of_sport.Length)
+            {
+                ParseMatchList(index);
+                index++;
+
+            }
+            BetList = new List<Bet>();
+            DeleteNotActiveMatch();
+            foreach (var match in browserDict)
+            {
+                ParseMatch(match.Value);
+            }
+
+        }
+
+        public void DeleteNotActiveMatch()
+        {
+            var notActiveMatchArray = browserDict.Where(e => !activeMatchList.Contains(e.Key)).Select(e => e.Key).ToArray();
+
+            foreach (var key in notActiveMatchArray)
+                browserDict.Remove(key);
+        }
+
+        public void ParseMatchList(int index)
+        {
+            string html = matchListBrowser.GetSourceAsync().Result;
+            HtmlDocument doc = new HtmlDocument();
+            doc.LoadHtml(html);
+            HtmlNodeCollection matchList = doc.DocumentNode.SelectNodes("//li[@class='groupedListItem first' or @class='groupedListItem']");
+
+
+            if (matchList == null) return;
+            foreach (var node in matchList)
+            {
+                string All = node.InnerHtml;
+                HtmlDocument All_Doc = new HtmlDocument();
+                All_Doc.LoadHtml(All);
+                //
+                HtmlNodeCollection h3 = All_Doc.DocumentNode.SelectNodes("//h3");
+                string l = h3.First().InnerText;
+                if (l == type_of_sport[index])
+                {
+                    HtmlNodeCollection matchNodes = All_Doc.DocumentNode.SelectNodes("//li[@class='groupedListSubItem first' or @class='groupedListSubItem last' or @class='groupedListSubItem' or @class='groupedListSubItem first last']");
+                    if (matchNodes == null) return;
+                    foreach (var node2 in matchNodes)
+                    {
+
+                        string id = String.Empty;
+
+                        id = node2.Attributes["id"].Value;
+                        id = id.Remove(0, 2);
+                        activeMatchList.Add(id);
+
+
+                        if (!browserDict.ContainsKey(id))
+                        {
+                            string url = "https://mobile.leonbets.net/mobile/#eventDetails/:" + id;
+                            Console.WriteLine(url);
+                            browserDict.Add(id, new ChromiumWebBrowser(url));
+                            System.Threading.Thread.Sleep(5000);
+                        }
+                        if (activeMatchList.Count == MaximumMatches) break;
+                    }
+                }
+            }
+
+
+
+
+
+        }
+
+        private void ParseMatch(ChromiumWebBrowser browser)
+        {
+
+            if (!browser.IsBrowserInitialized || browser.IsLoading)
+                return;
+
+            var task = browser.GetSourceAsync();
+            task.Wait(2000);
+            if (!task.IsCompleted) return;
+            string html = task.Result;
+
+            HtmlDocument doc = new HtmlDocument();
+            doc.LoadHtml(html);
+
+            MatchName matchName = GetMatchName(doc);
+            if (matchName == null) return;
+            Sport sport = GetSport(doc);
+            if (sport == Sport.NotSupported) return;
+
+
+            string BetUrl = browser.Address;
+
+
+            Bet result = null;
+
+            HtmlNodeCollection maindocument = doc.DocumentNode.SelectNodes("//li[@class='groupedListItem']");
+
+            if (maindocument == null) return;
+
+            foreach (var node in maindocument)
+            {
+                result = null;
+                try
+                {
+                    string all_main = node.InnerHtml;
+
+                    HtmlDocument document = new HtmlDocument();
+                    document.LoadHtml(all_main);
+
+                    string maintype = document.DocumentNode.SelectNodes("//h3").First().InnerText;
+                    HtmlNodeCollection betsNodes = document.DocumentNode.SelectNodes("//a[@id]");
+
+                    Team team = GetTeam(maintype);
+                    string time = GetTime(maintype);// зробити час
+                    foreach (var node2 in betsNodes)
+                    {
+                        string value = node2.InnerHtml;
+                        if (!value.Contains("class=\"oddHolder\"")) continue;
+                        HtmlDocument document2 = new HtmlDocument();
+                        document2.LoadHtml(value);
+                        HtmlNodeCollection test = document2.DocumentNode.SelectNodes("//div");
+
+                        string type = test.First().InnerText;
+                        string coeff = test.Last().InnerText;
+
+                        double Probability = Convert.ToDouble(coeff.Replace(".", ","));
+                        if (maintype == "1X2")
+                        {
+                            if (type == "1")
+                            {
+                                result = new ResultBet(ResultBetType.First, time, Probability, matchName, BetUrl, JavaSelectCode, sport, Maker);
+                            }
+                            if (type == "x")
+                            {
+                                result = new ResultBet(ResultBetType.Draw, time, Probability, matchName, BetUrl, JavaSelectCode, sport, Maker);
+                            }
+                            if (type == "2")
+                            {
+                                result = new ResultBet(ResultBetType.Second, time, Probability, matchName, BetUrl, JavaSelectCode, sport, Maker);
+                            }
+                        }
+
+                        if (maintype.Contains("Total") && !maintype.Contains("Asian"))
+                        {
+                            if (type.Contains("Under"))
+                            {
+                                try
+                                {
+                                    double param = Convert.ToDouble(type.Split(new string[] { "Under (", ")" }, StringSplitOptions.RemoveEmptyEntries)[0].Replace(".", ","));
+
+                                    result = new TotalBet(TotalBetType.Under, param, time, team, Probability, matchName, BetUrl, JavaSelectCode, sport, Maker);
+
+                                }
+                                catch { }
+                            }
+                            if (type.Contains("Over"))
+                            {
+                                double param = Convert.ToDouble(type.Split(new string[] { "Over (", ")" }, StringSplitOptions.RemoveEmptyEntries)[0].Replace(".", ","));
+
+                                result = new TotalBet(TotalBetType.Over, param, time, team, Probability, matchName, BetUrl, JavaSelectCode, sport, Maker);
+                            }
+                        }/*
+                        if (maintype.Contains("Handicap") && !maintype.Contains("Asian"))
+                        {
+                            if (type.Contains("Under"))
+                            {
+                                try
+                                {
+                                    double param = Convert.ToDouble(type.Split(new string[] { "Under (", ")" }, StringSplitOptions.RemoveEmptyEntries)[0].Replace(".", ","));
+
+                                    result = new TotalBet(HandicapBetType.Under, param, time, Team.All, Probability, matchName, BetUrl, JavaSelectCode, sport, Maker);
+
+                                }
+                                catch { }
+                            }
+                            if (type.Contains("Over"))
+                            {
+                                double param = Convert.ToDouble(type.Split(new string[] { "Over (", ")" }, StringSplitOptions.RemoveEmptyEntries)[0].Replace(".", ","));
+
+                                result = new TotalBet(TotalBetType.Over, param, time, Team.All, Probability, matchName, BetUrl, JavaSelectCode, sport, Maker);
+                            }
+                        }
+                        */
+                        // на leon не має нормальних handicap
+                        if (result != null)
+                            BetList.Add(result);
+                    }
+
+                }
+                catch (Exception e)
+                {
+                    Console.Write(e.Message);
+                }
+
+
+            }
+            #region code
+            foreach (var output in BetList)
+            {
+                Console.WriteLine();
+                Console.Write("{0} vs {1}   ", output.MatchName.FirstTeam, output.MatchName.SecondTeam);
+                Console.Write("Sport : {0}  ", output.Sport);
+                try
+                {
+                    var T = output as ResultBet;
+                    if (T != null)
+                    {
+                        Console.Write("{0}", ((ResultBet)output).ToString());
+                        Console.Write("coef: {0}", T.Odds);
+                    }
+                }
+                catch (Exception ex) { Console.WriteLine(ex.Message); }
+                try
+                {
+                    var T = output as TotalBet;
+                    if (T != null)
+                    {
+                        Console.Write("{0}", ((TotalBet)output).ToString());
+                        Console.Write("coef: {0}", T.Odds);
+                    }
+                }
+                catch { }
+                try
+                {
+                    var h = output as HandicapBet;
+                    if (h != null)
+                    {
+                        Console.Write("{0}", ((HandicapBet)output).ToString());
+                        Console.Write(" coef: {0}", h.Odds);
+                    }
+                }
+                catch { }
+
+            }
+
+            #endregion
+            System.Threading.Thread.Sleep(500);
+        }
+
+
+
+        MatchName GetMatchName(HtmlDocument doc)
+        {
+            try
+            {
+                string opp1 = doc.DocumentNode.SelectNodes("//td[@class='nameOne type2']").First().InnerText;
+                string opp2 = doc.DocumentNode.SelectNodes("//td[@class='nameTwo type2']").First().InnerText;
+
+                opp1 = opp1.Split(new string[] { "<h1>", "</h1>" }, StringSplitOptions.RemoveEmptyEntries)[0];
+                opp2 = opp2.Split(new string[] { "<h1>", "</h1>" }, StringSplitOptions.RemoveEmptyEntries)[0];
+
+                return new MatchName(opp1, opp2);
+            }
+            catch { return null; }
+        }
+
+        Sport GetSport(HtmlDocument doc)
+        {
+            try
+            {
+                HtmlNodeCollection node = doc.DocumentNode.SelectNodes("//span[@class='preInfo type2']");
+                string sport = node.First().InnerText;
+
+
+                sport = sport.Split(new string[] { " -" }, StringSplitOptions.RemoveEmptyEntries)[0];
+
+                switch (sport)
+                {
+                    case "Football": return Sport.Football;
+                    case "Basketball": return Sport.Basketball;
+                    case "Baseball": return Sport.Baseball;
+                    case "Tennis": return Sport.Tennis;
+                    case "Ice Hockey": return Sport.IceHockey;
+                    case "Volleyball": return Sport.Volleyball;
+                }
+
+                return Sport.NotSupported;
+            }
+            catch
+            {
+                return Sport.NotSupported;
+            }
+        }
+        Team GetTeam(string team)
+        {
+            if (!team.Contains("Player 1") && !team.Contains("Player 2"))
+                return Team.All;
+            else
+            if (team.Contains("Player 1") && !team.Contains("Player 2"))
+                return Team.First;
+            else
+            if (!team.Contains("Player 1") && team.Contains("Player 2"))
+                return Team.Second;
+            else
+                // return Team.NotSupported;
+                return Team.All;
+        }
+        string GetTime(string TotalorHand)
+        {
+            string time = null;
+            if ((!TotalorHand.Contains("Sets") && !TotalorHand.Contains("sets")) && (TotalorHand.Contains("Set") || TotalorHand.Contains("set")))
+            {
+                if (TotalorHand.Contains("1") || TotalorHand.Contains("first"))
+                    time = "1";
+                else
+               if (TotalorHand.Contains("2") || TotalorHand.Contains("second"))
+                    time = "2";
+                else
+               if (TotalorHand.Contains("3") || TotalorHand.Contains("third"))
+                    time = "3";
+                else
+               if (TotalorHand.Contains("4") || TotalorHand.Contains("fourth"))
+                    time = "4";
+                if (TotalorHand.Contains("5") || TotalorHand.Contains("fifth"))
+                    time = "5";
+                return time;
+            }
+            if (!TotalorHand.Contains("1st") && !TotalorHand.Contains("2nd") && !TotalorHand.Contains("3rd") && !TotalorHand.Contains("4th") && !TotalorHand.Contains("first") && !TotalorHand.Contains("second") && !TotalorHand.Contains("third") && !TotalorHand.Contains("fourth") && !TotalorHand.Contains("fifth"))
+                time = "All Game";
+            else
+            if (TotalorHand.Contains("1st") || TotalorHand.Contains("first"))
+                time = "1";
+            else
+            if (TotalorHand.Contains("2nd") || TotalorHand.Contains("second"))
+                time = "2";
+            else
+            if (TotalorHand.Contains("3rd") || TotalorHand.Contains("third"))
+                time = "3";
+            else
+            if (TotalorHand.Contains("4th") || TotalorHand.Contains("fourth"))
+                time = "4";
+            if (TotalorHand.Contains("5th") || TotalorHand.Contains("fifth"))
+                time = "5";
+            if (TotalorHand.Contains("Half"))
+                time += "/2";
+            if (TotalorHand.Contains("Quarter"))
+                time += "/4";
+            return time;
+        }
+    }
+
+}

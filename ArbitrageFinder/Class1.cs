@@ -4,13 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BetsLibrary
+namespace ArbitrageFinder
 {
-    public enum Bookmaker
+    public class Class1
     {
-        Marathonbet,
-        Titanbet,
-        Olimp,
-        Leon
     }
 }
