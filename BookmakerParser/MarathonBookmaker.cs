@@ -67,6 +67,7 @@ namespace BookmakerParser
             }
             BetList = new List<Bet>();
             DeleteNotActiveMatch();
+
             foreach (var match in browserDict)
             {
                 ParseMatch(match.Value);
@@ -140,7 +141,6 @@ namespace BookmakerParser
                 result = null;
                 if (node.Attributes["data-market-type"] != null) continue;
                 HtmlAttribute attribute = node.Attributes["data-sel"];
-                
                 if (attribute == null) continue;
                 string value = attribute.Value.Replace("&quot;", string.Empty);
 
@@ -151,106 +151,89 @@ namespace BookmakerParser
 
                 string TotalorHand = value.Split(new string[] { "mn:", ",ewc:" }, StringSplitOptions.RemoveEmptyEntries)[1];
                 if (TotalorHand.Contains(" + ")) continue;
-
+                if (TotalorHand.Contains("minutes") || TotalorHand.Contains("Minutes")
+                    || type.Contains("minutes") || type.Contains("Minutes")) continue;
+                Team team = GetTeam(TotalorHand, matchName);
                 string time = GetTime(TotalorHand);
                 #region main bets
-                if (type == matchName.FirstTeam + " To Win")
-                    result = new ResultBet(ResultBetType.First, "All Game", Probability, matchName, BetUrl, JavaSelectCode, sport, Maker);
-                else
-                if (type == "Draw")
-                    result = new ResultBet(ResultBetType.Draw, "All Game", Probability, matchName, BetUrl, JavaSelectCode, sport, Maker);
-                else
-                if (type == matchName.SecondTeam + " To Win")
-                    result = new ResultBet(ResultBetType.Second, "All Game", Probability, matchName, BetUrl, JavaSelectCode, sport, Maker);
-                else
-                if (type == matchName.FirstTeam + " To Win or Draw")
-                    result = new ResultBet(ResultBetType.FirstOrDraw, "All Game", Probability, matchName, BetUrl, JavaSelectCode, sport, Maker);
-                else
-                if (type == matchName.FirstTeam + " To Win or " + matchName.SecondTeam + " To Win")
-                    result = new ResultBet(ResultBetType.FirstOrSecond, "All Game", Probability, matchName, BetUrl, JavaSelectCode, sport, Maker);
-                else
-                if (type == matchName.SecondTeam + " To Win or Draw")
-                    result = new ResultBet(ResultBetType.SecondOrDraw, "All Game", Probability, matchName, BetUrl, JavaSelectCode, sport, Maker);
-
+                if (TotalorHand.Contains("Match Result") || TotalorHand == "Result")
+                {
+                    if (type == matchName.FirstTeam + " To Win")
+                        result = new ResultBet(ResultBetType.First, "All Game", Probability, matchName, BetUrl, JavaSelectCode, sport, Maker);
+                    else
+                    if (type == "Draw")
+                        result = new ResultBet(ResultBetType.Draw, "All Game", Probability, matchName, BetUrl, JavaSelectCode, sport, Maker);
+                    else
+                    if (type == matchName.SecondTeam + " To Win")
+                        result = new ResultBet(ResultBetType.Second, "All Game", Probability, matchName, BetUrl, JavaSelectCode, sport, Maker);
+                    else
+                    if (type == matchName.FirstTeam + " To Win or Draw")
+                        result = new ResultBet(ResultBetType.FirstOrDraw, "All Game", Probability, matchName, BetUrl, JavaSelectCode, sport, Maker);
+                    else
+                    if (type == matchName.FirstTeam + " To Win or " + matchName.SecondTeam + " To Win")
+                        result = new ResultBet(ResultBetType.FirstOrSecond, "All Game", Probability, matchName, BetUrl, JavaSelectCode, sport, Maker);
+                    else
+                    if (type == matchName.SecondTeam + " To Win or Draw")
+                        result = new ResultBet(ResultBetType.SecondOrDraw, "All Game", Probability, matchName, BetUrl, JavaSelectCode, sport, Maker);
+                }
                 #endregion
                 else
                 #region Totals for All Team
                     // Totals
-                    if (TotalorHand.Contains("Total") && !TotalorHand.Contains("Sets") && !TotalorHand.Contains("Innings") && !TotalorHand.Contains(matchName.FirstTeam) && !TotalorHand.Contains(matchName.SecondTeam))
+                    if (TotalorHand.Contains("Total") && !TotalorHand.Contains("Sets") && !TotalorHand.Contains("Innings"))
                 {
                     if (type.Contains("Under"))
                     {
-                        try
+                        if (TotalorHand.Contains("Asian"))
                         {
-                            double param = Convert.ToDouble(type.Split(new string[] { "Under ", "\0" }, StringSplitOptions.RemoveEmptyEntries)[0].Replace(".", ","));
+                            try
+                            {
+                                double first_param = Convert.ToDouble(type.Split(new string[] { "Under ", "," }, StringSplitOptions.RemoveEmptyEntries)[0].Replace(".", ","));
+                                double second_param = Convert.ToDouble(type.Split(new string[] { "Under ", "," }, StringSplitOptions.RemoveEmptyEntries)[1].Replace(".", ","));
 
-                            result = new TotalBet(TotalBetType.Under, param, time, Team.All, Probability, matchName, BetUrl, JavaSelectCode, sport, Maker);
+                                double param = (first_param + second_param) / 2;
+                                result = new TotalBet(TotalBetType.Under, param, time, team, Probability, matchName, BetUrl, JavaSelectCode, sport, Maker);
 
+                            }
+                            catch { }
                         }
-                        catch { }
+                        else
+                        {
+                            try
+                            {
+                                double param = Convert.ToDouble(type.Split(new string[] { "Under ", "\0" }, StringSplitOptions.RemoveEmptyEntries)[0].Replace(".", ","));
+
+                                result = new TotalBet(TotalBetType.Under, param, time, team, Probability, matchName, BetUrl, JavaSelectCode, sport, Maker);
+
+                            }
+                            catch { }
+                        }
                     }
                     if (type.Contains("Over"))
                     {
-                        try
+                        if (TotalorHand.Contains("Asian"))
                         {
-                            double param = Convert.ToDouble(type.Split(new string[] { "Over ", "\0" }, StringSplitOptions.RemoveEmptyEntries)[0].Replace(".", ","));
+                            try
+                            {
+                                double first_param = Convert.ToDouble(type.Split(new string[] { "Over ", "," }, StringSplitOptions.RemoveEmptyEntries)[0].Replace(".", ","));
+                                double second_param = Convert.ToDouble(type.Split(new string[] { "Over ", "," }, StringSplitOptions.RemoveEmptyEntries)[1].Replace(".", ","));
 
-                            result = new TotalBet(TotalBetType.Over, param, time, Team.All, Probability, matchName, BetUrl, JavaSelectCode, sport, Maker);
+                                double param = (first_param + second_param) / 2;
+                                result = new TotalBet(TotalBetType.Over, param, time, team, Probability, matchName, BetUrl, JavaSelectCode, sport, Maker);
+
+                            }
+                            catch { }
                         }
-                        catch { }
-                    }
-                }
-                #endregion
-                else
-                #region Totals for first Team
-                    if (TotalorHand.Contains("Total") && !TotalorHand.Contains("Sets") && !TotalorHand.Contains("Innings") && TotalorHand.Contains(matchName.FirstTeam) && !TotalorHand.Contains(matchName.SecondTeam))
-                {
-                    if (type.Contains("Under"))
-                    {
-                        try
+                        else
                         {
-                            double param = Convert.ToDouble(type.Split(new string[] { "Under ", "\0" }, StringSplitOptions.RemoveEmptyEntries)[0].Replace(".", ","));
+                            try
+                            {
+                                double param = Convert.ToDouble(type.Split(new string[] { "Over ", "\0" }, StringSplitOptions.RemoveEmptyEntries)[0].Replace(".", ","));
 
-                            result = new TotalBet(TotalBetType.Under, param, time, Team.First, Probability, matchName, BetUrl, JavaSelectCode, sport, Maker);
+                                result = new TotalBet(TotalBetType.Over, param, time, team, Probability, matchName, BetUrl, JavaSelectCode, sport, Maker);
+                            }
+                            catch { }
                         }
-                        catch { }
-                    }
-                    if (type.Contains("Over"))
-                    {
-                        try
-                        {
-                            double param = Convert.ToDouble(type.Split(new string[] { "Over ", "\0" }, StringSplitOptions.RemoveEmptyEntries)[0].Replace(".", ","));
-
-                            result = new TotalBet(TotalBetType.Over, param, time, Team.First, Probability, matchName, BetUrl, JavaSelectCode, sport, Maker);
-                        }
-                        catch { }
-                    }
-                }
-                #endregion
-                else
-                #region Totals for second Team
-                    if (TotalorHand.Contains("Total") && !TotalorHand.Contains("Sets") && !TotalorHand.Contains("Innings") && !TotalorHand.Contains(matchName.FirstTeam) && TotalorHand.Contains(matchName.SecondTeam))
-                {
-                    if (type.Contains("Under"))
-                    {
-                        try
-                        {
-                            double param = Convert.ToDouble(type.Split(new string[] { "Under ", "\0" }, StringSplitOptions.RemoveEmptyEntries)[0].Replace(".", ","));
-
-                            result = new TotalBet(TotalBetType.Under, param, time, Team.Second, Probability, matchName, BetUrl, JavaSelectCode, sport, Maker);
-
-                        }
-                        catch { }
-                    }
-                    if (type.Contains("Over"))
-                    {
-                        try
-                        {
-                            double param = Convert.ToDouble(type.Split(new string[] { "Over ", "\0" }, StringSplitOptions.RemoveEmptyEntries)[0].Replace(".", ","));
-
-                            result = new TotalBet(TotalBetType.Over, param, time, Team.Second, Probability, matchName, BetUrl, JavaSelectCode, sport, Maker);
-                        }
-                        catch { }
                     }
                 }
                 #endregion
@@ -265,14 +248,29 @@ namespace BookmakerParser
                         if (TotalorHand.Contains("Draw No Bet")) param = 0;
                         else
                         {
-                            try
+                            if (TotalorHand.Contains("Asian"))
                             {
-                                test = type.Split(new string[] { matchName.FirstTeam + " (", ")" }, StringSplitOptions.RemoveEmptyEntries)[0].Replace(".", ",");
-                                param = Convert.ToDouble(test);
+                                try
+                                {
+                                    double first_param = Convert.ToDouble(type.Split(new string[] { matchName.FirstTeam + " (", ")", "," }, StringSplitOptions.RemoveEmptyEntries)[0].Replace(".", ","));
+                                    double second_param = Convert.ToDouble(type.Split(new string[] { matchName.FirstTeam + " (", ")", "," }, StringSplitOptions.RemoveEmptyEntries)[1].Replace(".", ","));
+
+                                    param = (first_param + second_param) / 2;
+                                }
+                                catch { }
+
                             }
-                            catch
+                            else
                             {
-                                continue;
+                                try
+                                {
+                                    test = type.Split(new string[] { matchName.FirstTeam + " (", ")" }, StringSplitOptions.RemoveEmptyEntries)[0].Replace(".", ",");
+                                    param = Convert.ToDouble(test);
+                                }
+                                catch
+                                {
+                                    continue;
+                                }
                             }
                         }
 
@@ -287,14 +285,29 @@ namespace BookmakerParser
                         if (TotalorHand.Contains("Draw No Bet")) param = 0;
                         else
                         {
-                            try
+                            if (TotalorHand.Contains("Asian"))
                             {
-                                test = type.Split(new string[] { matchName.SecondTeam + " (", ")" }, StringSplitOptions.RemoveEmptyEntries)[0].Replace(".", ",");
-                                param = Convert.ToDouble(test);
+                                try
+                                {
+                                    double first_param = Convert.ToDouble(type.Split(new string[] { matchName.SecondTeam + " (", ")", "," }, StringSplitOptions.RemoveEmptyEntries)[0].Replace(".", ","));
+                                    double second_param = Convert.ToDouble(type.Split(new string[] { matchName.SecondTeam + " (", ")", "," }, StringSplitOptions.RemoveEmptyEntries)[1].Replace(".", ","));
+
+                                    param = (first_param + second_param) / 2;
+                                }
+                                catch { }
+
                             }
-                            catch
+                            else
                             {
-                                continue;
+                                try
+                                {
+                                    test = type.Split(new string[] { matchName.SecondTeam + " (", ")" }, StringSplitOptions.RemoveEmptyEntries)[0].Replace(".", ",");
+                                    param = Convert.ToDouble(test);
+                                }
+                                catch
+                                {
+                                    continue;
+                                }
                             }
                         }
                         result = new HandicapBet(HandicapBetType.F2, param, time, Probability, matchName, BetUrl, JavaSelectCode, sport, Maker);
@@ -303,7 +316,15 @@ namespace BookmakerParser
                 #endregion
 
                 if (result != null)
+                {
+                    int index = BetList.IndexOf(result);
+                    if (index!=-1)
+                    {
+                        BetList[index].ChangeOdds(result.Odds);
+                    }
+                    else
                     BetList.Add(result);
+                }
 
             }
 
@@ -395,6 +416,20 @@ namespace BookmakerParser
                 time += "/4";
             return time;
         }
+        Team GetTeam(string TotalorHand, MatchName name)
+        {
+            Team team;
+            if (!TotalorHand.Contains(name.FirstTeam) && !TotalorHand.Contains(name.SecondTeam))
+                team = Team.All;
+            else
+            if (TotalorHand.Contains(name.FirstTeam) && !TotalorHand.Contains(name.SecondTeam))
+                team = Team.First;
+            else
+            if (!TotalorHand.Contains(name.FirstTeam) && TotalorHand.Contains(name.SecondTeam))
+                team = Team.Second;
+            else team = Team.All;
+            return team;
+        }
         Sport GetSport(HtmlDocument doc)
         {
             try
@@ -420,7 +455,5 @@ namespace BookmakerParser
         }
 
     }
-
-
 
 }

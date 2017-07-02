@@ -12,16 +12,15 @@ namespace BookmakerParser
     public class LeonBets : BetsLibrary.BookmakerParser
     {
         private string MatchListUrl = "https://mobile.leonbets.net/mobile/#liveEvents";
-
-        private int countMatches = 0;
-        private const int MaximumMatches = 20;
+        
+        private const int MaximumMatches = 3;
 
         private Dictionary<string, ChromiumWebBrowser> browserDict = new Dictionary<string, ChromiumWebBrowser>();
         List<string> activeMatchList = new List<string>();
         private ChromiumWebBrowser matchListBrowser;
         private const Bookmaker Maker = Bookmaker.Leon;
         string JavaSelectCode = "Java";
-        string[] type_of_sport = { "Football", "Basketball", "Tennis", "Voleyball" };
+        string[] type_of_sport = { "Soccer", "Basketball", "Tennis", "Volleyball", "Baseball" };
         public LeonBets()
         {
 
@@ -185,7 +184,7 @@ namespace BookmakerParser
                             }
                         }
 
-                        if (maintype.Contains("Total") && !maintype.Contains("Asian"))
+                        if (maintype.Contains("Total"))
                         {
                             if (type.Contains("Under"))
                             {
@@ -204,29 +203,77 @@ namespace BookmakerParser
 
                                 result = new TotalBet(TotalBetType.Over, param, time, team, Probability, matchName, BetUrl, JavaSelectCode, sport, Maker);
                             }
-                        }/*
-                        if (maintype.Contains("Handicap") && !maintype.Contains("Asian"))
+                        }
+                        if (maintype.Contains("Handicap") && maintype.Contains("Asian"))
                         {
-                            if (type.Contains("Under"))
+                            string first_or_second_team = type.Split(new string[] { " (" }, StringSplitOptions.RemoveEmptyEntries)[0];
+                            if(first_or_second_team=="1")
                             {
-                                try
-                                {
-                                    double param = Convert.ToDouble(type.Split(new string[] { "Under (", ")" }, StringSplitOptions.RemoveEmptyEntries)[0].Replace(".", ","));
+                                double param = Convert.ToDouble(type.Split(new string[] { "(", ")" }, StringSplitOptions.RemoveEmptyEntries)[1].Replace(".", ","));
 
-                                    result = new TotalBet(HandicapBetType.Under, param, time, Team.All, Probability, matchName, BetUrl, JavaSelectCode, sport, Maker);
-
-                                }
-                                catch { }
+                                result = new HandicapBet(HandicapBetType.F1, param, time, Probability, matchName, BetUrl, JavaSelectCode, sport, Maker);
                             }
-                            if (type.Contains("Over"))
+                            if (first_or_second_team == "2")
                             {
-                                double param = Convert.ToDouble(type.Split(new string[] { "Over (", ")" }, StringSplitOptions.RemoveEmptyEntries)[0].Replace(".", ","));
+                                double param = Convert.ToDouble(type.Split(new string[] { "(", ")" }, StringSplitOptions.RemoveEmptyEntries)[1].Replace(".", ","));
 
-                                result = new TotalBet(TotalBetType.Over, param, time, Team.All, Probability, matchName, BetUrl, JavaSelectCode, sport, Maker);
+                                result = new HandicapBet(HandicapBetType.F2, param, time, Probability, matchName, BetUrl, JavaSelectCode, sport, Maker);
                             }
                         }
-                        */
-                        // на leon не має нормальних handicap
+                        else
+                        if (maintype.Contains("Handicap") && !maintype.Contains("Asian"))
+                        {
+                            string first_or_second_team = type.Split(new string[] { " (" }, StringSplitOptions.RemoveEmptyEntries)[0];
+                            if (first_or_second_team == "1")
+                            {
+                                string initial_score= type.Split(new string[] { "(", ")" }, StringSplitOptions.RemoveEmptyEntries)[1];
+                                int first_number = Convert.ToInt32(initial_score.Split(new string[] { ":" }, StringSplitOptions.RemoveEmptyEntries)[0]);
+                                int second_number = Convert.ToInt32(initial_score.Split(new string[] { ":" }, StringSplitOptions.RemoveEmptyEntries)[1]);
+                                double param = 0;
+                                if (first_number!=0)
+                                {
+                                    param = first_number - 0.5;
+                                }
+                                if (second_number != 0)
+                                {
+                                    param = (-1) * (second_number) - 0.5;
+                                }
+                                result = new HandicapBet(HandicapBetType.F1, param, time, Probability, matchName, BetUrl, JavaSelectCode, sport, Maker);
+                            }
+                            else
+                            if (first_or_second_team == "2")
+                            {
+                                string initial_score = type.Split(new string[] { "(", ")" }, StringSplitOptions.RemoveEmptyEntries)[1];
+                                int first_number = Convert.ToInt32(initial_score.Split(new string[] { ":" }, StringSplitOptions.RemoveEmptyEntries)[0]);
+                                int second_number = Convert.ToInt32(initial_score.Split(new string[] { ":" }, StringSplitOptions.RemoveEmptyEntries)[1]);
+                                double param = 0;
+                                if (first_number != 0)
+                                {
+                                    param = (-1)*first_number - 0.5;
+                                }
+                                if (second_number != 0)
+                                {
+                                    param = second_number - 0.5;
+                                }
+                                result = new HandicapBet(HandicapBetType.F2, param, time, Probability, matchName, BetUrl, JavaSelectCode, sport, Maker);
+                            }
+                        }
+                        else
+                        if(maintype== "Draw No Bet")
+                        {
+
+                            double param = 0;
+                            if (type.Contains("1"))
+                            {
+                                result = new HandicapBet(HandicapBetType.F1, param, time, Probability, matchName, BetUrl, JavaSelectCode, sport, Maker);
+                            }
+                            else
+                            if(type.Contains("2"))
+                            {
+                                result = new HandicapBet(HandicapBetType.F2, param, time, Probability, matchName, BetUrl, JavaSelectCode, sport, Maker);
+                            }
+                        }
+
                         if (result != null)
                             BetList.Add(result);
                     }
@@ -311,7 +358,7 @@ namespace BookmakerParser
 
                 switch (sport)
                 {
-                    case "Football": return Sport.Football;
+                    case "Soccer": return Sport.Football;
                     case "Basketball": return Sport.Basketball;
                     case "Baseball": return Sport.Baseball;
                     case "Tennis": return Sport.Tennis;
@@ -376,9 +423,9 @@ namespace BookmakerParser
                 time = "4";
             if (TotalorHand.Contains("5th") || TotalorHand.Contains("fifth"))
                 time = "5";
-            if (TotalorHand.Contains("Half"))
+            if (TotalorHand.Contains("Half") || TotalorHand.Contains("half"))
                 time += "/2";
-            if (TotalorHand.Contains("Quarter"))
+            if (TotalorHand.Contains("Quarter") || TotalorHand.Contains("quarter"))
                 time += "/4";
             return time;
         }
