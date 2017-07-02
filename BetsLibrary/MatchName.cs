@@ -35,6 +35,8 @@ namespace BetsLibrary
                 name = name.Replace(symbol, string.Empty);
 
             name = name.ToLower();
+            name = name.Replace("fk ", string.Empty);
+            name = name.Replace("fc ", string.Empty);
 
             return name.Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
         }
