@@ -14,6 +14,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Media;
 using BetsLibrary;
+using CefSharp.Wpf;
 
 namespace Arbitrage_Client
 {
@@ -102,6 +103,17 @@ namespace Arbitrage_Client
             browserWindow.GoTo(arbitrageBet.Bet.BetUrl, BookmakersSettingsCollection.Get(arbitrageBet.Bookmaker));
             browserWindow.Title = string.Format("{0} {1} {2} Profit: {3:0.00}/{4:0.00} Coeff: {5}", arbitrageBet.Bookmaker, arbitrageBet.MatchName, arbitrageBet.Bet, arbitrageBet.Profit, arbitrageBet.ProfitVsAverage, arbitrageBet.Coeff);
             browserWindow.Show();
+            browserWindow.GetBrowser.LoadingStateChanged+= (browserO, args)=>
+            {
+                if (!args.IsLoading)
+                {
+                    new Task(() =>
+                    {
+                        Task.Delay(2000);
+                      //  arbitrageBe
+                    }).Start();
+                }
+            };
             isBrowserOpen = true;
             PlaceBet.IsEnabled = false;
         }
@@ -127,7 +139,7 @@ namespace Arbitrage_Client
             if (selectedItem == null) return;
             ArbitrageBet arbitrageBet = selectedItem as ArbitrageBet;
 
-            PlacedBets.AddBet(arbitrageBet.Bet);
+            PlacedBets.AddBet(arbitrageBet);
             BetsList.Items.Remove(selectedItem);
         }
 
@@ -140,6 +152,24 @@ namespace Arbitrage_Client
             filterWindow.Closed += (i, j) => isFilterWindowOpen = false;
             filterWindow.Show();
             isFilterWindowOpen = true;
+        }
+
+        private void Sync(List<ArbitrageBet> newList)
+        {
+            newList = newList.Where(bet => !PlacedBets.Contains(bet) 
+            && FilterSettings.Bookmakers.Contains(bet.Bookmaker) 
+            && FilterSettings.Sports.Contains(bet.Sport) 
+            && FilterSettings.MinProfit <= bet.Profit
+            && FilterSettings.MinProfitVsAverage <= bet.ProfitVsAverage).ToList();
+
+            this.Dispatcher.Invoke(() =>
+            {
+                for(int i=0; i < BetsList.Items.Count; i++)
+                    if (!newList.Contains(BetsList.Items[i])) { BetsList.Items.Remove(i); i--; }
+
+                foreach (var bet in newList)
+                    if (!BetsList.Items.Contains(bet)) BetsList.Items.Add(bet);
+            });
         }
     }
 }

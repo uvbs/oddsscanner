@@ -11,7 +11,7 @@ namespace Arbitrage_Client
 {
     public static class PlacedBets
     {
-        private static Dictionary<Bet, DateTime> betsDict = new Dictionary<Bet, DateTime>();
+        private static Dictionary<ArbitrageBet, DateTime> betsDict = new Dictionary<ArbitrageBet, DateTime>();
         private const string filePath = "placedbets.dat";
         private static TimeSpan timeToDelete = TimeSpan.FromHours(5);
 
@@ -24,11 +24,17 @@ namespace Arbitrage_Client
             using (StreamReader sw = new StreamReader(filePath))
             using (JsonReader reader = new JsonTextReader(sw))
             {
-                betsDict = serializer.Deserialize<Dictionary<Bet, DateTime>>(reader);
+                betsDict = serializer.Deserialize<Dictionary<ArbitrageBet, DateTime>>(reader);
             }
         }
 
-        public static void AddBet(Bet bet)
+        public static bool Contains(ArbitrageBet bet)
+        {
+            var bets = betsDict.Where(placedBet => placedBet.Key.Bet == bet.Bet && placedBet.Key.Bookmaker == bet.Bookmaker);
+            return bets.Count() != 0;
+        }
+
+        public static void AddBet(ArbitrageBet bet)
         {
             betsDict.Add(bet, DateTime.Now);
             DeleteOldBets();

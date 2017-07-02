@@ -13,6 +13,7 @@
             <ListView.View>
                 <GridView>
                     <GridViewColumn Header="Букмекер" Width="200" DisplayMemberBinding="{Binding Bookmaker}"/>
+                    <GridViewColumn Header="Спорт" Width="200" DisplayMemberBinding="{Binding Sport}" />
                     <GridViewColumn Header="Матч" Width="200" DisplayMemberBinding="{Binding MatchName}" />
                     <GridViewColumn Header="Ставка" Width="200" DisplayMemberBinding="{Binding Bet}" />
                     <GridViewColumn Header="Коефф" Width="200" DisplayMemberBinding="{Binding Coeff}" />
