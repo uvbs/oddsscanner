@@ -76,6 +76,27 @@
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="BetsLibrary">
+      <HintPath>..\BetsLibrary\bin\Debug\BetsLibrary.dll</HintPath>
+    </Reference>
+    <Reference Include="BookmakerParser">
+      <HintPath>..\BookmakerParser\bin\x86\Debug\BookmakerParser.dll</HintPath>
+    </Reference>
+    <Reference Include="CefSharp, Version=57.0.0.0, Culture=neutral, PublicKeyToken=40c4b6fc221f4138, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\CefSharp.Common.57.0.0\CefSharp\x86\CefSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="CefSharp.Core, Version=57.0.0.0, Culture=neutral, PublicKeyToken=40c4b6fc221f4138, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\CefSharp.Common.57.0.0\CefSharp\x86\CefSharp.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="CefSharp.OffScreen, Version=57.0.0.0, Culture=neutral, PublicKeyToken=40c4b6fc221f4138, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\CefSharp.OffScreen.57.0.0\CefSharp\x86\CefSharp.OffScreen.dll</HintPath>
+    </Reference>
+    <Reference Include="CefSharp.Wpf">
+      <HintPath>..\packages\CefSharp.Wpf.57.0.0\CefSharp\x86\CefSharp.Wpf.dll</HintPath>
+    </Reference>
     <Reference Include="HtmlAgilityPack, Version=1.4.9.5, Culture=neutral, PublicKeyToken=bd319b19eaf3b43a, processorArchitecture=MSIL">
       <HintPath>..\packages\HtmlAgilityPack.1.4.9.5\lib\Net45\HtmlAgilityPack.dll</HintPath>
     </Reference>
@@ -98,14 +119,6 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\BetsLibrary\BetsLibrary.csproj">
-      <Project>{6ae0228a-2f69-48ef-bbc0-e28682bbf19e}</Project>
-      <Name>BetsLibrary</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\BookmakerParser\BookmakerParser.csproj">
-      <Project>{46bcf344-8753-4965-a86f-4e6b1c0fe180}</Project>
-      <Name>BookmakerParser</Name>
-    </ProjectReference>
     <ProjectReference Include="..\OddsAnalyzer\OddsAnalyzer.csproj">
       <Project>{2e279eec-8e38-4a99-897a-3e45c53b2637}</Project>
       <Name>OddsAnalyzer</Name>
