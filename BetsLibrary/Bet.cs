@@ -11,6 +11,7 @@ namespace BetsLibrary
         public double Odds { get; protected set; }
         public Bookmaker Bookmaker { get; protected set; }
         public MatchName MatchName { get; protected set; }
+        public Time Time { get; protected set; }
         public string BetUrl { get; protected set; }
         public string JavaScriptSelectorCode { get; protected set; }
         public Sport Sport { get; protected set; }
@@ -36,10 +37,9 @@ namespace BetsLibrary
     public class ResultBet : Bet
     {
         public ResultBetType ResultBetType { get; private set; }
-        public string Time { get; protected set; }
 
 
-        public ResultBet(ResultBetType ResultBetType, string Time, double Odds, MatchName MatchName, string BetUrl, string JavaScriptSelectorCode, Sport Sport, Bookmaker Bookmaker)
+        public ResultBet(ResultBetType ResultBetType, Time Time, double Odds, MatchName MatchName, string BetUrl, string JavaScriptSelectorCode, Sport Sport, Bookmaker Bookmaker)
         {
             this.ResultBetType = ResultBetType;
             this.Time = Time;
@@ -86,10 +86,9 @@ namespace BetsLibrary
     public class HandicapBet : Bet
     {
         public HandicapBetType HandicapBetType { get; private set; }
-        public string Time { get; protected set; }
         public double HandicapValue { get; private set; }
 
-        public HandicapBet(HandicapBetType handicapBetType, double HandicapValue, string Time, double Odds, MatchName MatchName, string BetUrl, string JavaScriptSelectorCode, Sport Sport, Bookmaker Bookmaker)
+        public HandicapBet(HandicapBetType handicapBetType, double HandicapValue, Time Time, double Odds, MatchName MatchName, string BetUrl, string JavaScriptSelectorCode, Sport Sport, Bookmaker Bookmaker)
         {
             this.Odds = Odds;
             this.HandicapBetType = handicapBetType;
@@ -136,11 +135,10 @@ namespace BetsLibrary
     public class TotalBet : Bet
     {
         public TotalBetType TotalBetType { get; private set; }
-        public string Time { get; protected set; }
         public double TotalValue { get; private set; }
         public Team Team { get; private set; }
 
-        public TotalBet(TotalBetType TotalBetType, double TotalValue, string Time, Team Team, double Odds, MatchName MatchName, string BetUrl, string JavaScriptSelectorCode, Sport Sport, Bookmaker Bookmaker)
+        public TotalBet(TotalBetType TotalBetType, double TotalValue, Time Time, Team Team, double Odds, MatchName MatchName, string BetUrl, string JavaScriptSelectorCode, Sport Sport, Bookmaker Bookmaker)
         {
             this.Odds = Odds;
             this.TotalBetType = TotalBetType;

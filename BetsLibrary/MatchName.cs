@@ -11,11 +11,8 @@ namespace BetsLibrary
         public string FirstTeam { get; private set; }
         public string SecondTeam { get; private set; }
 
-        private string[] FirstTeamNormalized;
-        private string[] SecondTeamNormalized;
-
-        private List<string> FirstTeamLastWords = new List<string>();
-        private List<string> SecondTeamLastWords = new List<string>();
+        private List<string> FirstTeamNormalized;
+        private List<string> SecondTeamNormalized;
 
         public MatchName(string FirstTeam, string SecondTeam)
         {
@@ -23,41 +20,94 @@ namespace BetsLibrary
             this.SecondTeam = SecondTeam;
             this.FirstTeamNormalized = NormalizeName(FirstTeam);
             this.SecondTeamNormalized = NormalizeName(SecondTeam);
-            if (FirstTeamNormalized.Length > 1) FirstTeamLastWords = GetWordVariants(FirstTeamNormalized[FirstTeamNormalized.Length - 1]);
-            if (SecondTeamNormalized.Length > 1) SecondTeamLastWords = GetWordVariants(SecondTeamNormalized[SecondTeamNormalized.Length - 1]);
         }
         
-        private string[] NormalizeName(string name)
+        private List<string> NormalizeName(string name)
         {
-            string[] symbolsToRemove = { ".", ",", "-", "(", ")" };
-
-            foreach (var symbol in symbolsToRemove)
-                name = name.Replace(symbol, string.Empty);
-
             name = name.ToLower();
             name = name.Replace("fk ", string.Empty);
             name = name.Replace("fc ", string.Empty);
 
-            return name.Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
+            List<string> result = new List<string>();
+            result.Add(name);
+
+            string[] symbolsToRemove = { ".", ",", "-", "(", ")", "'", "/" };
+
+            foreach (var symbol in symbolsToRemove)
+                result = RemoveSymbol(result, symbol);
+
+            return result;
         }
 
-        private static List<string> GetWordVariants(string word)
+        private bool IsSameTeamName(List<string> teamAList, List<string> teamBList)
         {
-            var result = AddSymbols(word[0].ToString(), 1);
-            result.Add(word[0].ToString());
-            return result;
+            foreach(var teamA in teamAList)
+                foreach(var teamB in teamBList)
+                {
+                    string[] teamAWords = teamA.Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
+                    string[] teamBWords = teamB.Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
 
-            List<string> AddSymbols(string start, int index)
+                    if (teamAWords.Length != teamBWords.Length) continue;
+
+                    if(!IsSameTeam(teamAWords, teamBWords)) continue;
+
+                    return true;
+                }
+
+            return false;
+
+            bool IsSameTeam(string[] teamAWords, string[] teamBWords)
             {
-                List<string> res = new List<string>();
-                if (index == word.Length) return res;
-                string wordWithSymbol = start + word[index];
-                res.Add(wordWithSymbol);
-                res.AddRange(AddSymbols(start, index + 1));
-                res.AddRange(AddSymbols(wordWithSymbol, index + 1));
+                for (int i = 0; i < teamAWords.Length; i++)
+                    if (!IsSameWord(teamAWords[i], teamBWords[i])) return false;
 
-                return res;
+                return true;
             }
+        }
+
+        private List<string> RemoveSymbol(List<string> names, string symbol)
+        {
+            List<string> result = new List<string>();
+
+            foreach(var name in names)
+            {
+                if(!name.Contains(symbol)) { result.Add(name); continue; }
+                result.Add(name.Replace(symbol, string.Empty));
+                result.Add(name.Replace(symbol, " "));
+            }
+
+            return result;
+        }
+
+        private bool IsSameWord(string wordA, string wordB)
+        {
+            wordA = wordA.Trim();
+            wordB = wordB.Trim();
+            if(wordA.Length < wordB.Length)
+            {
+                string tmp;
+                tmp = wordA;
+                wordA = wordB;
+                wordB = tmp;
+            }
+
+            if (wordA.Length == wordB.Length) return wordA == wordB;
+
+            if (wordA.Length < 1 || wordB.Length < 1) return false;
+            if (wordA[0] != wordB[0]) return false;
+
+            wordA = wordA.Remove(0, 1);
+            wordB = wordB.Remove(0, 1);
+
+            for(int b = 0; b < wordB.Length; b++)
+            {
+                int index = wordA.IndexOf(wordB[b]);
+                if (index == -1) return false;
+                wordA.Remove(0, index + 1);
+            }
+
+            return true;
+
         }
 
         public override string ToString()
@@ -82,31 +132,9 @@ namespace BetsLibrary
 
         public bool Equals(MatchName name)
         {
-
-
-            return EqualsTeamName(FirstTeamNormalized, FirstTeamLastWords, name.FirstTeamNormalized, name.FirstTeamLastWords) ||
-                EqualsTeamName(SecondTeamNormalized, SecondTeamLastWords, name.SecondTeamNormalized, name.SecondTeamLastWords);
-        }
-
-        private bool EqualsTeamName(string[] firstTeamName, List<string> firstTeamLastWords, string[] secondTeamName, List<string> secondTeamLastWords)
-        {
-            if (firstTeamName.Length != secondTeamName.Length) return false;
-
-            if (firstTeamName.Length > 1)
-            {
-
-                for (int i = 0; i < firstTeamName.Length - 1; i++)
-                    if (firstTeamName.Length != secondTeamName.Length) return false;
-
-
-                foreach (var word in firstTeamLastWords)
-                    if (secondTeamLastWords.Contains(word)) return true;
-
-                return false;
-            }
-
-            return firstTeamName[0] == secondTeamName[0];
             
+            return IsSameTeamName(FirstTeamNormalized, name.FirstTeamNormalized) || IsSameTeamName(SecondTeamNormalized, name.SecondTeamNormalized);
         }
+        
     }
 }

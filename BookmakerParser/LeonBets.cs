@@ -8,12 +8,12 @@ using HtmlAgilityPack;
 
 
 namespace BookmakerParser
-{
+{/*
     public class LeonBets : BetsLibrary.BookmakerParser
     {
         private string MatchListUrl = "https://mobile.leonbets.net/mobile/#liveEvents";
         
-        private const int MaximumMatches = 3;
+        private const int MaximumMatches = 200;
 
         private Dictionary<string, ChromiumWebBrowser> browserDict = new Dictionary<string, ChromiumWebBrowser>();
         List<string> activeMatchList = new List<string>();
@@ -155,7 +155,7 @@ namespace BookmakerParser
                     HtmlNodeCollection betsNodes = document.DocumentNode.SelectNodes("//a[@id]");
 
                     Team team = GetTeam(maintype);
-                    string time = GetTime(maintype);// зробити час
+                    string time = GetTime(maintype);
                     foreach (var node2 in betsNodes)
                     {
                         string value = node2.InnerHtml;
@@ -275,7 +275,15 @@ namespace BookmakerParser
                         }
 
                         if (result != null)
-                            BetList.Add(result);
+                        {
+                            int index = BetList.IndexOf(result);
+                            if (index != -1)
+                            {
+                                BetList[index].ChangeOdds(result.Odds);
+                            }
+                            else
+                                BetList.Add(result);
+                        }
                     }
 
                 }
@@ -429,6 +437,6 @@ namespace BookmakerParser
                 time += "/4";
             return time;
         }
-    }
+    }*/
 
 }

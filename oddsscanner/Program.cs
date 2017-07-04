@@ -22,26 +22,32 @@ namespace oddsscanner
         {
             ArbitrageFinder finder = new ArbitrageFinder();
 
-            //Marathonbet marathon = new Marathonbet();
-            LeonBets leon = new LeonBets();
+            OlimpBookmaker olimp = new OlimpBookmaker();
 
-           // finder.AddBookmaker(marathon);
-            finder.AddBookmaker(leon);
+            //   Marathonbet marathon = new Marathonbet();
+            // LeonBets leon = new LeonBets();
 
+            //  finder.AddBookmaker(marathon);
+            //     finder.AddBookmaker(leon);
+
+            finder.AddBookmaker(olimp);
             
             var result = finder.GetArbitrageBets();
 
             Console.WriteLine("here");
 
-            for (int i = 0; i < 20; i++)
+            for (int i = 0; i < 10; i++)
             {
                   result = finder.GetArbitrageBets();
+
+              //  var m_matches = marathon.GetMatchList();
+               // var l_matches = leon.GetMatchList();
                 //   marathon.Parse();
-                Thread.Sleep(2000);
+                Thread.Sleep(10000);
             }
 
                 List<BetsLibrary.Bet> list = new List<BetsLibrary.Bet>();
-
+            /*
             foreach(var bet in leon.GetBetList())
             {
                 if (!list.Contains(bet)) list.Add(bet);
@@ -83,9 +89,9 @@ namespace oddsscanner
                     catch { }
                 }
             }
-            
+            */
 
-     //       result = finder.GetArbitrageBets();
+            result = finder.GetArbitrageBets();
 
             Console.WriteLine(finder);
 

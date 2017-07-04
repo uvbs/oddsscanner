@@ -7,7 +7,7 @@ using CefSharp;
 using HtmlAgilityPack;
 
 namespace BookmakerParser
-{
+{/*
     public class Marathonbet : BetsLibrary.BookmakerParser
     {
         private string[] MatchListUrl
@@ -28,7 +28,7 @@ namespace BookmakerParser
 
         // iceHockey не можу знайти силку в лайві його не має і не буде до 2018 ... 
         //
-        private const int MaximumMatches = 3;
+        private const int MaximumMatches = 200;
 
         private Dictionary<string, ChromiumWebBrowser> browserDict = new Dictionary<string, ChromiumWebBrowser>();
         List<string> activeMatchList = new List<string>();
@@ -454,6 +454,6 @@ namespace BookmakerParser
             }
         }
 
-    }
+    }*/
 
 }

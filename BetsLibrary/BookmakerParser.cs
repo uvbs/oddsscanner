@@ -14,5 +14,15 @@ namespace BetsLibrary
 
         public abstract void Parse(); 
 
+        public List<MatchName> GetMatchList()
+        {
+            List<MatchName> result = new List<MatchName>();
+
+            foreach (var bet in BetList)
+                if (!result.Contains(bet.MatchName)) result.Add(bet.MatchName);
+
+            return result;
+        }
+
     }
 }

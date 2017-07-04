@@ -82,6 +82,7 @@
   <ItemGroup>
     <Compile Include="LeonBets.cs" />
     <Compile Include="MarathonBookmaker.cs" />
+    <Compile Include="OlimpBookmaker.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
