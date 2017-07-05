@@ -19,7 +19,7 @@ namespace BookmakerParser
         private ChromiumWebBrowser matchListBrowser;
         private const Bookmaker Maker = Bookmaker.Olimp;
         string JavaSelectCode = "Java";
-        string[] type_of_sport = { "1", "5", "3", "10", "29" }; // 1- football, 5 - basketball, 3 - tennis, 10 volleyball, 29 - baseball
+        string[] type_of_sport = { "1", "5", "3", "10" }; // 1- football, 5 - basketball, 3 - tennis, 10 volleyball
 
         private void LoadMatchListPages()
         {
