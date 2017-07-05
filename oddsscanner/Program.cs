@@ -95,8 +95,8 @@ namespace oddsscanner
 
             //  Console.WriteLine(finder);
 
-            MatchName name1 = new MatchName("Ukraine Dinamo", "Russia");
-            MatchName name2 = new MatchName("Ukraine B.", "Russia A");
+            MatchName name1 = new MatchName("Ukraine Dinamo (U-21)", "Russia");
+            MatchName name2 = new MatchName("D/Ukr U21", "Russia A");
 
             Console.WriteLine(name1.Equals(name2));
 
