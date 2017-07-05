@@ -376,9 +376,7 @@ namespace BookmakerParser
                 {
                     case "Football": return Sport.Football;
                     case "Basketball": return Sport.Basketball;
-                    case "Baseball": return Sport.Baseball;
                     case "Tennis": return Sport.Tennis;
-                    case "Ice Hockey": return Sport.IceHockey;
                     case "Volleyball": return Sport.Volleyball;
                 }
 
