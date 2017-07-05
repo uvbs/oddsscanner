@@ -139,6 +139,7 @@ namespace BookmakerParser
                     string coeff = node.Attributes[string.Format("data-v{0}", betParams[1])].Value;
                     double odds = Convert.ToDouble(coeff.Replace(".", ","));
                     Time time = GetTime(betParams);
+                    if (time == null) continue;
                     
                     if(betParams[1] == "1") // 1, X, 2, 1X, 12, x2
                     {
@@ -310,7 +311,7 @@ namespace BookmakerParser
                 if (data2 == 13 || data2 == 14 || data2 == 15 || data2 == 22) value = 2;
             else
                 if (data2 == 16 || data2 == 17 || data2 == 18) value = 3;
-            else throw new Exception();
+            else return null;
 
             return new Time(type, value);
         }

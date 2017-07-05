@@ -46,7 +46,7 @@ namespace oddsscanner
                 Thread.Sleep(10000);
             }
 
-                List<BetsLibrary.Bet> list = new List<BetsLibrary.Bet>();
+                List<Bet> list = new List<Bet>();
             /*
             foreach(var bet in leon.GetBetList())
             {
