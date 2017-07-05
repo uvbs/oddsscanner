@@ -297,7 +297,7 @@ namespace BookmakerParser
             if (data[7] == "1")
                 type = TimeType.Half;
             else
-            if (data[7] == "3")
+            if (data[7] == "3" || data[7] == "10")
                 type = TimeType.Set;
             else
             if (data[7] == "5")
