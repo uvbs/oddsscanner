@@ -30,11 +30,9 @@
 
             <GroupBox Grid.Column="1" Header="Спорт" Margin="5,5,5,0">
                 <StackPanel Margin="10,10,0,0">
-                    <CheckBox Content="Бейсбол" Name="UseBaseball"/>
                     <CheckBox Content="Баскетбол" Name="UseBasketball"/>
                     <CheckBox Content="Футбол" Name="UseFootball"/>
-                    <CheckBox Content="Олимп" Name="UseTennis"/>
-                    <CheckBox Content="Хокей" Name="UseHockey"/>
+                    <CheckBox Content="Теннис" Name="UseTennis"/>
                     <CheckBox Content="Волейбол" Name="UseVolleyball"/>
                 </StackPanel>
             </GroupBox>

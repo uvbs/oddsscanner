@@ -8,11 +8,9 @@ namespace BetsLibrary
 {
     public enum Sport
     {
-        Baseball,
         Basketball,
         Football,
         Tennis,
-        IceHockey,
         Volleyball,
         NotSupported
     }

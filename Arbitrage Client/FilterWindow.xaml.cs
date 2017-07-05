@@ -31,10 +31,8 @@ namespace Arbitrage_Client
 
             UseTennis.IsChecked = FilterSettings.Sports.Contains(Sport.Tennis);
             UseVolleyball.IsChecked = FilterSettings.Sports.Contains(Sport.Volleyball);
-            UseHockey.IsChecked = FilterSettings.Sports.Contains(Sport.IceHockey);
             UseFootball.IsChecked = FilterSettings.Sports.Contains(Sport.Football);
             UseBasketball.IsChecked = FilterSettings.Sports.Contains(Sport.Basketball);
-            UseBaseball.IsChecked = FilterSettings.Sports.Contains(Sport.Baseball);
 
             MinProfit.Text = FilterSettings.MinProfit.ToString();
             MinProfitVsAverage.Text = FilterSettings.MinProfitVsAverage.ToString();
@@ -52,10 +50,8 @@ namespace Arbitrage_Client
 
             if (UseTennis.IsChecked == true) sports.Add(Sport.Tennis);
             if (UseVolleyball.IsChecked == true) sports.Add(Sport.Volleyball);
-            if (UseHockey.IsChecked == true) sports.Add(Sport.IceHockey);
             if (UseFootball.IsChecked == true) sports.Add(Sport.Football);
             if (UseBasketball.IsChecked == true) sports.Add(Sport.Basketball);
-            if (UseBaseball.IsChecked == true) sports.Add(Sport.Baseball);
 
             FilterSettings.Bookmakers = bookmakers;
             FilterSettings.Sports = sports;

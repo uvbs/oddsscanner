@@ -273,9 +273,7 @@ namespace BookmakerParser
 
                 if (sport.Contains("Soccer")) return Sport.Football;
                 if (sport.Contains("Basketball")) return Sport.Basketball;
-                if (sport.Contains("Baseball")) return Sport.Baseball;
                 if (sport.Contains("Tennis")) return Sport.Tennis;
-                if (sport.Contains("Ice Hockey")) return Sport.IceHockey;
                 if (sport.Contains("Volleyball")) return Sport.Volleyball;
                 
                 return Sport.NotSupported;
