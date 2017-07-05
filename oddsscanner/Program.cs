@@ -12,6 +12,7 @@ using HtmlAgilityPack;
 using OddsAnalyzer;
 using BookmakerParser;
 using BetsLibrary;
+using System.Linq;
 
 namespace oddsscanner
 {
@@ -30,20 +31,21 @@ namespace oddsscanner
             finder.AddBookmaker(marathon);
             finder.AddBookmaker(leon);
             finder.AddBookmaker(olimp);
-            finder.AddBookmaker(titan);
+         //   finder.AddBookmaker(titan);
             
-            var result = finder.GetArbitrageBets();
+            var result = finder.GetForks();
 
          //   Console.WriteLine("here");
 
             for (int i = 0; i < 10; i++)
             {
-               result = finder.GetArbitrageBets();
+               result = finder.GetForks();
 
                var m_matches = marathon.GetMatchList();
                var l_matches = leon.GetMatchList();
                 var o_matches = olimp.GetMatchList();
                 var t_matches = titan.GetMatchList();
+                var forks = result.Where(e => e.Profit > 0);
                 Thread.Sleep(10000);
             }
 

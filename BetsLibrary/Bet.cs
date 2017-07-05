@@ -20,6 +20,8 @@ namespace BetsLibrary
         {
             this.Odds = newOdds;
         }
+
+        public abstract List<Bet> GetForkBets();
         
 
     }
@@ -49,6 +51,57 @@ namespace BetsLibrary
             this.JavaScriptSelectorCode = JavaScriptSelectorCode;
             this.Sport = Sport;
             this.Bookmaker = Bookmaker;
+        }
+
+        public override List<Bet> GetForkBets()
+        {
+            List<Bet> result = new List<Bet>();
+
+            switch (ResultBetType)
+            {
+                case ResultBetType.First:
+                    if (Sport == Sport.Football)
+                    {
+                        result.Add(new ResultBet(ResultBetType.SecondOrDraw, Time, Odds, MatchName, BetUrl, JavaScriptSelectorCode, Sport, Bookmaker));
+                        result.Add(new HandicapBet(HandicapBetType.F2, 0.5, Time, Odds, MatchName, BetUrl, JavaScriptSelectorCode, Sport,Bookmaker));
+                    }
+                    else
+                    {
+                        result.Add(new ResultBet(ResultBetType.Second, Time, Odds, MatchName, BetUrl, JavaScriptSelectorCode, Sport, Bookmaker));
+                        result.Add(new HandicapBet(HandicapBetType.F2, 0, Time, Odds, MatchName, BetUrl, JavaScriptSelectorCode, Sport, Bookmaker));
+                    }
+                    break;
+                case ResultBetType.Draw:
+                        result.Add(new ResultBet(ResultBetType.FirstOrSecond, Time, Odds, MatchName, BetUrl, JavaScriptSelectorCode, Sport, Bookmaker));
+                    break;
+                case ResultBetType.Second:
+                    if (Sport == Sport.Football)
+                    {
+                        result.Add(new ResultBet(ResultBetType.FirstOrDraw, Time, Odds, MatchName, BetUrl, JavaScriptSelectorCode, Sport, Bookmaker));
+                        result.Add(new HandicapBet(HandicapBetType.F1, 0.5, Time, Odds, MatchName, BetUrl, JavaScriptSelectorCode, Sport, Bookmaker));
+                    }
+                    else
+                    {
+                        result.Add(new ResultBet(ResultBetType.First, Time, Odds, MatchName, BetUrl, JavaScriptSelectorCode, Sport, Bookmaker));
+                        result.Add(new HandicapBet(HandicapBetType.F1, 0, Time, Odds, MatchName, BetUrl, JavaScriptSelectorCode, Sport, Bookmaker));
+                    }
+                    break;
+                case ResultBetType.FirstOrDraw:
+                    result.Add(new ResultBet(ResultBetType.Second, Time, Odds, MatchName, BetUrl, JavaScriptSelectorCode, Sport, Bookmaker));
+                    result.Add(new HandicapBet(HandicapBetType.F2, -0.5, Time, Odds, MatchName, BetUrl, JavaScriptSelectorCode, Sport, Bookmaker));
+                    result.Add(new HandicapBet(HandicapBetType.F2, 0, Time, Odds, MatchName, BetUrl, JavaScriptSelectorCode, Sport, Bookmaker));
+                    break;
+                case ResultBetType.FirstOrSecond:
+                    result.Add(new ResultBet(ResultBetType.Draw, Time, Odds, MatchName, BetUrl, JavaScriptSelectorCode, Sport, Bookmaker));
+                    break;
+                case ResultBetType.SecondOrDraw:
+                    result.Add(new ResultBet(ResultBetType.First, Time, Odds, MatchName, BetUrl, JavaScriptSelectorCode, Sport, Bookmaker));
+                    result.Add(new HandicapBet(HandicapBetType.F1, -0.5, Time, Odds, MatchName, BetUrl, JavaScriptSelectorCode, Sport, Bookmaker));
+                    result.Add(new HandicapBet(HandicapBetType.F1, 0, Time, Odds, MatchName, BetUrl, JavaScriptSelectorCode, Sport, Bookmaker));
+                    break;
+            }
+            
+            return result;
         }
 
         public override int GetHashCode()
@@ -99,6 +152,21 @@ namespace BetsLibrary
             this.JavaScriptSelectorCode = JavaScriptSelectorCode;
             this.Sport = Sport;
             this.Bookmaker = Bookmaker;
+        }
+
+        public override List<Bet> GetForkBets()
+        {
+            List<Bet> result = new List<Bet>();
+
+            result.Add(new HandicapBet(HandicapBetType == HandicapBetType.F1 ? HandicapBetType.F2 : HandicapBetType.F1, HandicapValue * (-1), Time, Odds, MatchName, BetUrl, JavaScriptSelectorCode, Sport, Bookmaker));
+            
+            if(HandicapValue == 0)
+            {
+                if (Sport == Sport.Football) result.Add(new ResultBet(HandicapBetType == HandicapBetType.F1 ? ResultBetType.SecondOrDraw : ResultBetType.FirstOrDraw, Time, Odds, MatchName, BetUrl, JavaScriptSelectorCode, Sport, Bookmaker));
+                else result.Add(new ResultBet(HandicapBetType == HandicapBetType.F2 ? ResultBetType.Second : ResultBetType.First, Time, Odds, MatchName, BetUrl, JavaScriptSelectorCode, Sport, Bookmaker));
+            }
+
+            return result;
         }
 
         public override int GetHashCode()
@@ -152,6 +220,16 @@ namespace BetsLibrary
             this.Bookmaker = Bookmaker;
         }
 
+        public override List<Bet> GetForkBets()
+        {
+            List<Bet> result = new List<Bet>();
+
+            if (TotalBetType == TotalBetType.Over) result.Add(new TotalBet(TotalBetType.Under, TotalValue, Time, Team, Odds, MatchName, BetUrl, JavaScriptSelectorCode, Sport, Bookmaker));
+            else result.Add(new TotalBet(TotalBetType.Over, TotalValue, Time, Team, Odds, MatchName, BetUrl, JavaScriptSelectorCode, Sport, Bookmaker));
+
+            return result;
+        }
+
         public override int GetHashCode()
         {
             return TotalBetType.GetHashCode() ^ Time.GetHashCode() ^ Team.GetHashCode() ^ MatchName.GetHashCode();
@@ -185,6 +263,8 @@ namespace BetsLibrary
                 return null;
 
         }
+
+      
     }
 
 

@@ -9,7 +9,7 @@ namespace BetsLibrary
     public class ArbitrageBet
     {
         public Bet Bet { get; private set; }
-        public double ProfitVsAverage { get; private set; }
+        public string ForkType { get; private set; }
         public double Profit { get; private set; }
 
         public Bookmaker Bookmaker => Bet.Bookmaker;
@@ -17,16 +17,16 @@ namespace BetsLibrary
         public double Coeff => Bet.Odds;
         public Sport Sport => Bet.Sport;
 
-        public ArbitrageBet(Bet Bet, double ProfitVsAverage, double Profit)
+        public ArbitrageBet(Bet Bet, string ForkType, double Profit)
         {
             this.Bet = Bet;
-            this.ProfitVsAverage = Math.Round(ProfitVsAverage * 100, 2);
+            this.ForkType = ForkType;
             this.Profit = Math.Round(Profit * 100, 2);
         }
 
         public override int GetHashCode()
         {
-            return Bet.GetHashCode() ^ Profit.GetHashCode() ^ ProfitVsAverage.GetHashCode();
+            return Bet.GetHashCode() ^ Profit.GetHashCode() ^ ForkType.GetHashCode();
         }
 
         public override bool Equals(object obj)
@@ -40,7 +40,7 @@ namespace BetsLibrary
 
         public bool Equals(ArbitrageBet bet)
         {
-            return bet.Bet.Equals(Bet) && bet.Bookmaker == Bookmaker && bet.Coeff == Coeff && bet.Coeff == Coeff && bet.Profit == Profit && bet.ProfitVsAverage == ProfitVsAverage;
+            return bet.Bet.Equals(Bet) && bet.Bookmaker == Bookmaker && bet.Coeff == Coeff && bet.Coeff == Coeff && bet.Profit == Profit && bet.ForkType == ForkType;
         }
     }
 }

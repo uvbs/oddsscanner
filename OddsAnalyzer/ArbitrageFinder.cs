@@ -38,10 +38,9 @@ namespace OddsAnalyzer
 
             LastRefresh = DateTime.Now;
         }
-
+        /*
         public List<ArbitrageBet> GetArbitrageBets()
         {
-            Console.WriteLine("1");
             Refresh();
             List<ArbitrageBet> result = new List<ArbitrageBet>();
             foreach (var analyzer in analyzerDict)
@@ -51,6 +50,22 @@ namespace OddsAnalyzer
                     result.Add(bet);
             }
 
+            return result;
+        }*/
+
+        public List<ArbitrageBet> GetForks()
+        {
+            Refresh();
+            List<ArbitrageBet> result = new List<ArbitrageBet>();
+            foreach (var analyzer in analyzerDict)
+                result.AddRange(analyzer.Value.GetForks(this));
+
+            return result;
+        }
+
+        public BetAnalyzer GetBetAnalyzer(Bet bet)
+        {
+            analyzerDict.TryGetValue(bet, out BetAnalyzer result);
             return result;
         }
 

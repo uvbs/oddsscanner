@@ -101,7 +101,7 @@ namespace Arbitrage_Client
             if (selectedItem == null) return;
             ArbitrageBet arbitrageBet = selectedItem as ArbitrageBet;
             browserWindow.GoTo(arbitrageBet.Bet.BetUrl, BookmakersSettingsCollection.Get(arbitrageBet.Bookmaker));
-            browserWindow.Title = string.Format("{0} {1} {2} Profit: {3:0.00}/{4:0.00} Coeff: {5}", arbitrageBet.Bookmaker, arbitrageBet.MatchName, arbitrageBet.Bet, arbitrageBet.Profit, arbitrageBet.ProfitVsAverage, arbitrageBet.Coeff);
+            browserWindow.Title = string.Format("{0} {1} {2} Profit: {3:0.00}/{4:0.00} Coeff: {5}", arbitrageBet.Bookmaker, arbitrageBet.MatchName, arbitrageBet.Bet, arbitrageBet.Profit, arbitrageBet.Coeff);
             browserWindow.Show();
             browserWindow.GetBrowser.LoadingStateChanged+= (browserO, args)=>
             {
@@ -159,8 +159,7 @@ namespace Arbitrage_Client
             newList = newList.Where(bet => !PlacedBets.Contains(bet) 
             && FilterSettings.Bookmakers.Contains(bet.Bookmaker) 
             && FilterSettings.Sports.Contains(bet.Sport) 
-            && FilterSettings.MinProfit <= bet.Profit
-            && FilterSettings.MinProfitVsAverage <= bet.ProfitVsAverage).ToList();
+            && FilterSettings.MinProfit <= bet.Profit).ToList();
 
             this.Dispatcher.Invoke(() =>
             {
