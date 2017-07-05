@@ -20,9 +20,9 @@ namespace oddsscanner
 
         public static void Main(string[] args)
         {
-            ArbitrageFinder finder = new ArbitrageFinder();
+           // ArbitrageFinder finder = new ArbitrageFinder();
 
-            OlimpBookmaker olimp = new OlimpBookmaker();
+         //   OlimpBookmaker olimp = new OlimpBookmaker();
 
             //   Marathonbet marathon = new Marathonbet();
             // LeonBets leon = new LeonBets();
@@ -30,21 +30,21 @@ namespace oddsscanner
             //  finder.AddBookmaker(marathon);
             //     finder.AddBookmaker(leon);
 
-            finder.AddBookmaker(olimp);
+           // finder.AddBookmaker(olimp);
             
-            var result = finder.GetArbitrageBets();
+           // var result = finder.GetArbitrageBets();
 
-            Console.WriteLine("here");
+         //   Console.WriteLine("here");
 
-            for (int i = 0; i < 10; i++)
-            {
-                  result = finder.GetArbitrageBets();
+          //  for (int i = 0; i < 10; i++)
+           // {
+           //       result = finder.GetArbitrageBets();
 
               //  var m_matches = marathon.GetMatchList();
                // var l_matches = leon.GetMatchList();
                 //   marathon.Parse();
-                Thread.Sleep(10000);
-            }
+               // Thread.Sleep(10000);
+        //    }
 
                 List<Bet> list = new List<Bet>();
             /*
@@ -91,9 +91,16 @@ namespace oddsscanner
             }
             */
 
-            result = finder.GetArbitrageBets();
+            // result = finder.GetArbitrageBets();
 
-            Console.WriteLine(finder);
+            //  Console.WriteLine(finder);
+
+            MatchName name1 = new MatchName("Ukraine Dinamo", "Russia");
+            MatchName name2 = new MatchName("Ukraine B.", "Russia A");
+
+            Console.WriteLine(name1.Equals(name2));
+
+            Console.ReadLine();
 
         }
 

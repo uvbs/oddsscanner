@@ -30,7 +30,7 @@ namespace Arbitrage_Client
 
         public static bool Contains(ArbitrageBet bet)
         {
-            var bets = betsDict.Where(placedBet => placedBet.Key.Bet == bet.Bet && placedBet.Key.Bookmaker == bet.Bookmaker);
+            var bets = betsDict.Where(placedBet => placedBet.Key.Bet.Equals(bet.Bet) && placedBet.Key.Bookmaker == bet.Bookmaker);
             return bets.Count() != 0;
         }
 

@@ -67,7 +67,7 @@ namespace BetsLibrary
 
         public bool Equals(ResultBet bet)
         {
-            return bet.Time == Time && bet.ResultBetType == ResultBetType && bet.MatchName == MatchName && bet.Sport == Sport;
+            return bet.Time.Equals(Time) && bet.ResultBetType == ResultBetType && bet.MatchName.Equals(MatchName) && bet.Sport == Sport;
         }
 
         public override string ToString()
@@ -117,7 +117,7 @@ namespace BetsLibrary
 
         public bool Equals(HandicapBet bet)
         {
-            return bet.Time == Time && bet.HandicapBetType == HandicapBetType && bet.HandicapValue == HandicapValue && bet.MatchName == MatchName && bet.Sport == Sport;
+            return bet.Time.Equals(Time) && bet.HandicapBetType == HandicapBetType && bet.HandicapValue == HandicapValue && bet.MatchName.Equals(MatchName) && bet.Sport == Sport;
         }
 
         public override string ToString()
@@ -168,7 +168,7 @@ namespace BetsLibrary
 
         public bool Equals(TotalBet bet)
         {
-            return bet.Time == Time && bet.TotalBetType == TotalBetType && bet.TotalValue == TotalValue && bet.Team == Team && bet.MatchName == MatchName && bet.Sport == Sport;
+            return bet.Time.Equals(Time) && bet.TotalBetType == TotalBetType && bet.TotalValue == TotalValue && bet.Team == Team && bet.MatchName.Equals(MatchName) && bet.Sport == Sport;
         }
 
         public override string ToString()

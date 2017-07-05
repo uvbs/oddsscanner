@@ -40,7 +40,7 @@ namespace BetsLibrary
 
         public bool Equals(ArbitrageBet bet)
         {
-            return bet.Bet == Bet && bet.Bookmaker == Bookmaker && bet.Coeff == Coeff && bet.Coeff == Coeff && bet.Profit == Profit && bet.ProfitVsAverage == ProfitVsAverage;
+            return bet.Bet.Equals(Bet) && bet.Bookmaker == Bookmaker && bet.Coeff == Coeff && bet.Coeff == Coeff && bet.Profit == Profit && bet.ProfitVsAverage == ProfitVsAverage;
         }
     }
 }

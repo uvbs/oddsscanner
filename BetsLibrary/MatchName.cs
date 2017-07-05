@@ -58,10 +58,21 @@ namespace BetsLibrary
 
             bool IsSameTeam(string[] teamAWords, string[] teamBWords)
             {
-                for (int i = 0; i < teamAWords.Length; i++)
-                    if (!IsSameWord(teamAWords[i], teamBWords[i])) return false;
+                if (teamAWords.Length == 0) return true;
 
-                return true;
+                var bWords = teamBWords.Where(word => IsSameWord(teamAWords[0], word));
+
+                foreach(var word in bWords)
+                {
+                    List<string> bList = teamBWords.ToList();
+                    bList.Remove(word);
+                    List<string> aList = teamAWords.ToList();
+                    aList.RemoveAt(0);
+
+                    if (IsSameTeam(aList.ToArray(), bList.ToArray())) return true;
+                }
+
+                return false;
             }
         }
 
@@ -132,7 +143,6 @@ namespace BetsLibrary
 
         public bool Equals(MatchName name)
         {
-            
             return IsSameTeamName(FirstTeamNormalized, name.FirstTeamNormalized) || IsSameTeamName(SecondTeamNormalized, name.SecondTeamNormalized);
         }
         
