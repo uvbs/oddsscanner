@@ -94,7 +94,6 @@ namespace BookmakerParser
         public void ParseMatchList(int index)
         {
             string html = matchListBrowser[index].GetSourceAsync().Result;
-            Console.WriteLine(html);
             HtmlDocument doc = new HtmlDocument();
             doc.LoadHtml(html);
 
@@ -165,12 +164,14 @@ namespace BookmakerParser
                 HtmlDocument main_doc = new HtmlDocument();
                 main_doc.LoadHtml(main_type_all);
                 HtmlNode name_of_typenode = main_doc.DocumentNode.SelectSingleNode("//span[@class='mkt-name']");
+                if (name_of_typenode == null || main_doc == null) continue;
                 string main_type = name_of_typenode.InnerText;
 
+                if (main_type == null) continue;
                 Team team = GetTeam(main_type, matchName);
 
                 Time time = GetTime(main_type);
-                
+
                 HtmlNodeCollection NodeList = main_doc.DocumentNode.SelectNodes("//div[@class='seln ' or @class='seln seln_sort-D' or @class='seln'] | //li | //span[@class='seln ' or @class='seln seln_sort-D' or @class='seln']");
                 if (NodeList == null) continue;
                 foreach (var node2 in NodeList)
@@ -256,15 +257,15 @@ namespace BookmakerParser
                         }
                         catch { continue; }
                     }
-                    if(main_type.Contains("Handicap"))
+                    if (main_type.Contains("Handicap"))
                     {
                         string type = node2_doc.DocumentNode.SelectNodes("//span[@class='seln-short-name']").First().InnerText;
                         double param = Convert.ToDouble(node2_doc.DocumentNode.SelectNodes("//span[@class='seln-hcap']").First().InnerText.Replace(".", ","));
-                        if(type=="1")
+                        if (type == "1")
                         {
                             result = new HandicapBet(HandicapBetType.F1, param, time, Probability, matchName, BetUrl, JavaSelectCode, sport, Maker);
                         }
-                        if (type=="2")
+                        if (type == "2")
                         {
                             result = new HandicapBet(HandicapBetType.F2, param, time, Probability, matchName, BetUrl, JavaSelectCode, sport, Maker);
                         }
@@ -282,23 +283,23 @@ namespace BookmakerParser
                             result = new HandicapBet(HandicapBetType.F2, param, time, Probability, matchName, BetUrl, JavaSelectCode, sport, Maker);
                         }
                     }
-                    
-                if (result != null)
-                {
-                    int index = BetList.IndexOf(result);
-                    if (index!=-1)
+
+                    if (result != null)
                     {
-                        BetList[index].ChangeOdds(result.Odds);
+                        int index = BetList.IndexOf(result);
+                        if (index != -1)
+                        {
+                            BetList[index].ChangeOdds(result.Odds);
+                        }
+                        else
+                            BetList.Add(result);
                     }
-                    else
-                    BetList.Add(result);
-                }
                 }
                 #endregion
 
 
             }
-                foreach (var output in BetList)
+            foreach (var output in BetList)
             {
                 Console.WriteLine();
                 Console.Write("{0} vs {1}   ", output.MatchName.FirstTeam, output.MatchName.SecondTeam);
@@ -325,7 +326,7 @@ namespace BookmakerParser
         }
         Time GetTime(string main_type)
         {
-            TimeType type=TimeType.AllGame;
+            TimeType type = TimeType.AllGame;
             int value = 0;
             if (!main_type.Contains("1st") && !main_type.Contains("2nd") && !main_type.Contains("3rd") && !main_type.Contains("4th"))
                 return new Time(TimeType.AllGame);
