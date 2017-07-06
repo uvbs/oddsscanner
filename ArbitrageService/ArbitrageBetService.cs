@@ -8,6 +8,9 @@ using System.Text;
 using BetsLibrary;
 using OddsAnalyzer;
 using BookmakerParser;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using System.Threading.Tasks;
 
 namespace ArbitrageService
 {
@@ -18,23 +21,62 @@ namespace ArbitrageService
     public class ArbitrageBetService : IArbitrageService
     {
         ArbitrageFinder finder;
+        List<ArbitrageBet> forkList = new List<ArbitrageBet>();
+        object lockobj = new object();
         public ArbitrageBetService()
         {
-          /*  finder = new ArbitrageFinder();
+            finder = new ArbitrageFinder();
 
             Marathonbet marathonbet = new Marathonbet();
             LeonBets leon = new LeonBets();
-
+            OlimpBookmaker olimp = new OlimpBookmaker();
+            TitanBet titan = new TitanBet();
 
             finder.AddBookmaker(marathonbet);
-            finder.AddBookmaker(leon);*/
+            finder.AddBookmaker(leon);
+            finder.AddBookmaker(olimp);
+            finder.AddBookmaker(titan);
+
+            new Task(() =>
+            {
+                while (true)
+                {
+
+                    var newForks = finder.GetForks();
+
+                    lock (lockobj)
+                    {
+                        forkList = newForks;
+                    }
+
+                    Task.Delay(1000).Wait();
+                }
+            }).Start();
+
+            
             
         }
 
-        public List<ArbitrageBet> GetArbitrageList()
+        public string GetArbitrageList(string filter)
         {
-            // return finder.GetArbitrageBets();
-            return null;
+
+            JObject o1 = JObject.Parse(filter);
+
+            List<Bookmaker> Bookmakers = o1["bookmakers"].ToObject<List<Bookmaker>>() ?? new List<Bookmaker>();
+            List<Sport> Sports = o1["sports"].ToObject<List<Sport>>() ?? new List<Sport>();
+            double MinProfit = o1["MinProfit"].ToObject<double>();
+
+            List<ArbitrageBet> forks;
+            Console.WriteLine(string.Join("\n", forkList));
+            lock (lockobj)
+            {
+                forks = forkList.Where(bet => Bookmakers.Contains(bet.Bookmaker) && Sports.Contains(bet.Sport) && MinProfit <= bet.Profit).ToList();
+            }
+
+            return JsonConvert.SerializeObject(forks, Newtonsoft.Json.Formatting.Indented, new JsonSerializerSettings
+            {
+                TypeNameHandling = TypeNameHandling.All
+            });
         }
         
     }

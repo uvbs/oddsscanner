@@ -20,8 +20,15 @@ namespace ArbitrageServiceHost
 
                 arbitrageServiceHost = new ServiceHost(typeof(ArbitrageBetService), httpBaseAddress);
 
+                BasicHttpBinding binding = new BasicHttpBinding();
+                binding.OpenTimeout = new TimeSpan(0, 20, 0);
+                binding.CloseTimeout = new TimeSpan(0, 20, 0);
+                binding.SendTimeout = new TimeSpan(0, 20, 0);
+                binding.ReceiveTimeout = new TimeSpan(0, 20, 0);
+                binding.MaxReceivedMessageSize = 2147483647;
+
                 arbitrageServiceHost.Description.Endpoints.Clear();
-                arbitrageServiceHost.AddServiceEndpoint(typeof(IArbitrageService), new WSHttpBinding(), "");
+                arbitrageServiceHost.AddServiceEndpoint(typeof(IArbitrageService), binding, "");
 
                 ServiceMetadataBehavior serviceBehavior = new ServiceMetadataBehavior();
                 serviceBehavior.HttpGetEnabled = true;

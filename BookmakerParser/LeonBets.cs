@@ -13,7 +13,7 @@ namespace BookmakerParser
     {
         private string MatchListUrl = "https://mobile.leonbets.net/mobile/#liveEvents";
 
-        private const int MaximumMatches = 10;
+        private const int MaximumMatches = 15;
 
         private Dictionary<string, ChromiumWebBrowser> browserDict = new Dictionary<string, ChromiumWebBrowser>();
         List<string> activeMatchList = new List<string>();

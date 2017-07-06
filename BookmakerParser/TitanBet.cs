@@ -25,7 +25,7 @@ namespace BookmakerParser
             }
         }
         const string switch_mobile = "http://sports.titanbet.com/web_nr?key=do_switch_platform&platform=mobile";
-        private const int MaximumMatches = 10;
+        private const int MaximumMatches = 15;
 
         private Dictionary<string, ChromiumWebBrowser> browserDict = new Dictionary<string, ChromiumWebBrowser>();
         List<string> activeMatchList = new List<string>();

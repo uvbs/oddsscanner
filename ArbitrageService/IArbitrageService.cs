@@ -15,7 +15,7 @@ namespace ArbitrageService
     {
 
         [OperationContract]
-        List<ArbitrageBet> GetArbitrageList();
+        string GetArbitrageList(string filter);
         
 
         // TODO: Add your service operations here

@@ -27,7 +27,7 @@ namespace BookmakerParser
 
         // iceHockey не можу знайти силку в лайві його не має і не буде до 2018 ... 
         //
-        private const int MaximumMatches = 10;
+        private const int MaximumMatches = 15;
 
         private Dictionary<string, ChromiumWebBrowser> browserDict = new Dictionary<string, ChromiumWebBrowser>();
         List<string> activeMatchList = new List<string>();

@@ -5,12 +5,12 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Arbitrage_Client"
         mc:Ignorable="d"
-        Title="Фильтр" Height="300" Width="300" ResizeMode="NoResize">
-    <Grid>
+        Title="Фильтр" Height="250.667" Width="300" ResizeMode="NoResize">
+    <Grid Margin="0,0,0,-1">
         <Grid.RowDefinitions>
-            <RowDefinition Height="134*"/>
-            <RowDefinition Height="104*"/>
-            <RowDefinition Height="31*"/>
+            <RowDefinition Height="111*"/>
+            <RowDefinition Height="50*"/>
+            <RowDefinition Height="35*"/>
         </Grid.RowDefinitions>
 
         <Grid Grid.Row="0">
@@ -47,18 +47,16 @@
             </Grid.ColumnDefinitions>
 
             <StackPanel Margin="10,10" Grid.Column="0">
-                <Label Content="Мин. разница в прибыли: "/>
-                <Label Content="Мин. разница против среднего: "/>
+                <Label Content="Минимальная прибыль "/>
             </StackPanel>
 
             <StackPanel Margin="10,10" Grid.Column="1">
                 <TextBox Name="MinProfit" Margin="0,5"/>
-                <TextBox Name="MinProfitVsAverage" Margin="0,3"/>
             </StackPanel>
 
         </Grid>
 
-        <Button Width="120" HorizontalAlignment="Right" Grid.Row="2" Content="Сохранить" Name="ContentButton" Margin="10,5" Click="ContentButton_Click"/>
+        <Button Width="120" HorizontalAlignment="Right" Grid.Row="2" Content="Сохранить" Name="ContentButton" Margin="0,10,10,5" Click="ContentButton_Click"/>
 
 
     </Grid>

@@ -27,6 +27,8 @@ namespace OddsAnalyzer
                         double profit = 1 - ((1 / bet.Odds) + (1 / possibleBet.Odds));
                         string type = string.Format("{0} - {1}", bet, possibleBet);
 
+                        profit = Math.Round(profit * 100, 2);
+
                         result.Add(new ArbitrageBet(bet, type, profit));
                     }
                 }

@@ -15,6 +15,7 @@ using System.Windows.Shapes;
 using System.Media;
 using BetsLibrary;
 using CefSharp.Wpf;
+using Newtonsoft.Json;
 
 namespace Arbitrage_Client
 {
@@ -28,7 +29,6 @@ namespace Arbitrage_Client
         {
             InitializeComponent();
             browserWindow = new BrowserWindow();
-            browserWindow.Closed += (i, j) => { isBrowserOpen = false; PlaceBet.IsEnabled = true; };
 
         }
         private void Button_Click(object sender, RoutedEventArgs e)
@@ -68,9 +68,40 @@ namespace Arbitrage_Client
 
         private void Window_Initialized(object sender, EventArgs e)
         {
-         /*   List<ArbitrageBet> list = new List<ArbitrageBet>();
-            list.Add(new ArbitrageBet(null, 1, 1));
-            BetsList.ItemsSource = list;*/
+            /*   List<ArbitrageBet> list = new List<ArbitrageBet>();
+               list.Add(new ArbitrageBet(null, 1, 1));
+               BetsList.ItemsSource = list;*/
+
+            ForkService.ArbitrageServiceClient client = new ForkService.ArbitrageServiceClient();
+            
+            var task = new Task(() =>
+            {
+                while (true)
+                {
+                    try
+                    {
+                        string result = client.GetArbitrageList(FilterSettings.GetJsonString());
+
+
+                    
+                    
+                        List<ArbitrageBet> newList = JsonConvert.DeserializeObject<List<ArbitrageBet>>(result, new JsonSerializerSettings
+                        {
+                            TypeNameHandling = TypeNameHandling.All
+                        });
+                    Sync(newList);
+                    }
+                    catch { }
+                    
+
+                    
+
+                    Task.Delay(1000).Wait();
+                }
+            });
+
+            task.Start();
+
         }
 
         private void Button_Click_1(object sender, RoutedEventArgs e)
@@ -100,8 +131,10 @@ namespace Arbitrage_Client
             object selectedItem = BetsList.SelectedItem;
             if (selectedItem == null) return;
             ArbitrageBet arbitrageBet = selectedItem as ArbitrageBet;
+            browserWindow = new BrowserWindow();
             browserWindow.GoTo(arbitrageBet.Bet.BetUrl, BookmakersSettingsCollection.Get(arbitrageBet.Bookmaker));
-            browserWindow.Title = string.Format("{0} {1} {2} Profit: {3:0.00}/{4:0.00} Coeff: {5}", arbitrageBet.Bookmaker, arbitrageBet.MatchName, arbitrageBet.Bet, arbitrageBet.Profit, arbitrageBet.Coeff);
+            browserWindow.Title = string.Format("{0} {1} {2} Profit: {3:0.00}% Coeff: {4}", arbitrageBet.Bookmaker, arbitrageBet.MatchName, arbitrageBet.Bet, arbitrageBet.Profit, arbitrageBet.Coeff);
+            browserWindow.Closed += (i, j) => { isBrowserOpen = false; PlaceBet.IsEnabled = true; };
             browserWindow.Show();
             browserWindow.GetBrowser.LoadingStateChanged+= (browserO, args)=>
             {
@@ -156,15 +189,12 @@ namespace Arbitrage_Client
 
         private void Sync(List<ArbitrageBet> newList)
         {
-            newList = newList.Where(bet => !PlacedBets.Contains(bet) 
-            && FilterSettings.Bookmakers.Contains(bet.Bookmaker) 
-            && FilterSettings.Sports.Contains(bet.Sport) 
-            && FilterSettings.MinProfit <= bet.Profit).ToList();
-
-            this.Dispatcher.Invoke(() =>
+            newList = newList.Where(bet => !PlacedBets.Contains(bet)).ToList();
+            
+            BetsList.Dispatcher.Invoke(() =>
             {
                 for(int i=0; i < BetsList.Items.Count; i++)
-                    if (!newList.Contains(BetsList.Items[i])) { BetsList.Items.Remove(i); i--; }
+                    if (!newList.Contains(BetsList.Items[i])) { BetsList.Items.RemoveAt(i); i--; }
 
                 foreach (var bet in newList)
                     if (!BetsList.Items.Contains(bet)) BetsList.Items.Add(bet);

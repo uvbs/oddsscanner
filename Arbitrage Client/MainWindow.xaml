@@ -9,7 +9,7 @@
         Title="Arbitrage"
          WindowState="Maximized" Initialized="Window_Initialized" >
     <Grid>
-        <ListView Margin="10,35,10,30" Name="BetsList">
+        <ListView Margin="10,35,10,30" Name="BetsList" ItemsSource="{Binding ArbitrageBets}">
             <ListView.View>
                 <GridView>
                     <GridViewColumn Header="Букмекер" Width="200" DisplayMemberBinding="{Binding Bookmaker}"/>
@@ -18,7 +18,6 @@
                     <GridViewColumn Header="Ставка" Width="200" DisplayMemberBinding="{Binding Bet}" />
                     <GridViewColumn Header="Коефф" Width="200" DisplayMemberBinding="{Binding Coeff}" />
                     <GridViewColumn Header="Прибыль" Width="200" DisplayMemberBinding="{Binding Profit}" />
-                    <GridViewColumn Header="Прибыль против среднего" Width="200" DisplayMemberBinding="{Binding ProfitVsAverage}" />
                 </GridView>
             </ListView.View>
         </ListView>

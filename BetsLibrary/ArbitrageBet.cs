@@ -21,7 +21,7 @@ namespace BetsLibrary
         {
             this.Bet = Bet;
             this.ForkType = ForkType;
-            this.Profit = Math.Round(Profit * 100, 2);
+            this.Profit = Profit;
         }
 
         public override int GetHashCode()
@@ -41,6 +41,11 @@ namespace BetsLibrary
         public bool Equals(ArbitrageBet bet)
         {
             return bet.Bet.Equals(Bet) && bet.Bookmaker == Bookmaker && bet.Coeff == Coeff && bet.Coeff == Coeff && bet.Profit == Profit && bet.ForkType == ForkType;
+        }
+
+        public override string ToString()
+        {
+            return string.Format("{0} {1} {2}", Bet, ForkType, Profit);
         }
     }
 }

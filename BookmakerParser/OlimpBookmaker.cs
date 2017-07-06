@@ -12,7 +12,7 @@ namespace BookmakerParser
     {
         private string MatchListUrl = "https://www.olimp.kz/betting";
 
-        private const int MaximumMatches = 5;
+        private const int MaximumMatches = 15;
 
         private Dictionary<string, ChromiumWebBrowser> browserDict = new Dictionary<string, ChromiumWebBrowser>();
         List<string> activeMatchList = new List<string>();

@@ -18,7 +18,6 @@ namespace Arbitrage_Client
         public static List<Sport> Sports = new List<Sport>();
 
         public static double MinProfit = 0;
-        public static double MinProfitVsAverage = 0;
 
 
         static FilterSettings()
@@ -31,19 +30,15 @@ namespace Arbitrage_Client
             Bookmakers = o1["bookmakers"].ToObject<List<Bookmaker>>() ?? new List<Bookmaker>();
             Sports = o1["sports"].ToObject<List<Sport>>() ?? new List<Sport>();
             MinProfit = o1["MinProfit"].ToObject<double>();
-            MinProfitVsAverage = o1.Property("MinProfitVsAverage").ToObject<double>();
-
         }
         
-
 
         public static void Save()
         {
             JObject filter = new JObject(
                             new JProperty("bookmakers", Bookmakers),
                             new JProperty("sports", Sports),
-                            new JProperty("MinProfit", MinProfit),
-                            new JProperty("MinProfitVsAverage", MinProfitVsAverage));
+                            new JProperty("MinProfit", MinProfit));
 
             // write JSON directly to a file
             using (StreamWriter file = File.CreateText(filepath))
@@ -52,6 +47,14 @@ namespace Arbitrage_Client
                 filter.WriteTo(writer);
             }
             
+        }
+
+        public static string GetJsonString()
+        {
+            return new JObject(
+                          new JProperty("bookmakers", Bookmakers),
+                          new JProperty("sports", Sports),
+                          new JProperty("MinProfit", MinProfit)).ToString();
         }
 
 

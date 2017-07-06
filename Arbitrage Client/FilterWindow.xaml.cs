@@ -35,7 +35,6 @@ namespace Arbitrage_Client
             UseBasketball.IsChecked = FilterSettings.Sports.Contains(Sport.Basketball);
 
             MinProfit.Text = FilterSettings.MinProfit.ToString();
-            MinProfitVsAverage.Text = FilterSettings.MinProfitVsAverage.ToString();
         }
 
         private void ContentButton_Click(object sender, RoutedEventArgs e)
@@ -59,7 +58,6 @@ namespace Arbitrage_Client
             try
             {
                 FilterSettings.MinProfit = Convert.ToDouble(MinProfit.Text);
-                FilterSettings.MinProfitVsAverage = Convert.ToDouble(MinProfitVsAverage.Text);
             }
             catch { }
 
