@@ -5,7 +5,7 @@ using BetsLibrary;
 using CefSharp.OffScreen;
 using CefSharp;
 using HtmlAgilityPack;
-
+using System.Threading.Tasks;
 namespace BookmakerParser
 {
     public class TitanBet : BetsLibrary.BookmakerParser
@@ -25,7 +25,7 @@ namespace BookmakerParser
             }
         }
         //const string switch_mobile = "http://sports.titanbet.com/web_nr?key=do_switch_platform&platform=mobile";
-        private const int MaximumMatches = 10;
+        private const int MaximumMatches = 100;
 
        // private Dictionary<string, ChromiumWebBrowser> browserDict = new Dictionary<string, ChromiumWebBrowser>();
         List<string> activeMatchList = new List<string>();
@@ -47,10 +47,14 @@ namespace BookmakerParser
                 index++;
             }
             BetList = new List<Bet>();
+            var tasks = new List<Task>();
+            int taskCount = 0;
 
             foreach (var match in activeMatchList)
             {
-                ParseMatch(match);
+                tasks.Add(Task.Factory.StartNew(() => ParseMatch(match)));
+                taskCount++;
+                if (taskCount > 12) { Task.WaitAll(tasks.ToArray()); taskCount = 0; }
             }
 
         }
@@ -136,10 +140,13 @@ namespace BookmakerParser
                     node2_doc.LoadHtml(node2_string);
 
                     HtmlNodeCollection node2_Collection = node2_doc.DocumentNode.SelectNodes("//span[@class='price dec']");
+                    if (node2_Collection == null) continue;
                     string coef = node2_Collection.First().InnerText;
+                    if (coef == "LP")
+                        continue;
                     double Probability = Convert.ToDouble(coef.Replace(".", ","));
                     #region main bets
-                    if (main_type == "Full Time Result" || main_type == "Match Winner")
+                    if (main_type == "Full Time Result" || main_type == "Match Winner" || (main_type.Contains("Set Winner") && !main_type.Contains("Game")) ||(main_type.Contains("Winner")))
                     {
                         string type = node2_doc.DocumentNode.SelectNodes("//span[@class='seln-short-name']").First().InnerText;
                         if (type == "1")
@@ -152,10 +159,10 @@ namespace BookmakerParser
                             result = new ResultBet(ResultBetType.Second, time, Probability, matchName, BetUrl, JavaSelectCode, sport, Maker);
 
                         if (type == "P1")
-                            result = new ResultBet(ResultBetType.First, time, Probability, matchName, BetUrl, JavaSelectCode, sport, Maker);
+                            result = new ResultBet(ResultBetType.P1, time, Probability, matchName, BetUrl, JavaSelectCode, sport, Maker);
                         else
-                            if (type == "P2")
-                            result = new ResultBet(ResultBetType.Second, time, Probability, matchName, BetUrl, JavaSelectCode, sport, Maker);
+                        if (type == "P2")
+                            result = new ResultBet(ResultBetType.P2, time, Probability, matchName, BetUrl, JavaSelectCode, sport, Maker);
                     }
                     if (main_type == "Double Chance")
                     {
@@ -212,13 +219,13 @@ namespace BookmakerParser
                     }
                     if (main_type.Contains("Handicap"))
                     {
-                        string type = node2_doc.DocumentNode.SelectNodes("//span[@class='seln-short-name']").First().InnerText;
+                        string type = node2_doc.DocumentNode.SelectNodes("//span[@class='seln-short-name' or @class='seln-name']").First().InnerText;
                         double param = Convert.ToDouble(node2_doc.DocumentNode.SelectNodes("//span[@class='seln-hcap']").First().InnerText.Replace(".", ","));
-                        if (type == "1")
+                        if (type == "1" || type.Contains(matchName.FirstTeam))
                         {
                             result = new HandicapBet(HandicapBetType.F1, param, time, Probability, matchName, BetUrl, JavaSelectCode, sport, Maker);
                         }
-                        if (type == "2")
+                        if (type == "2" || type.Contains(matchName.SecondTeam))
                         {
                             result = new HandicapBet(HandicapBetType.F2, param, time, Probability, matchName, BetUrl, JavaSelectCode, sport, Maker);
                         }
@@ -226,12 +233,13 @@ namespace BookmakerParser
                     if (main_type == "Draw No Bet")
                     {
                         double param = 0;
-                        string type = node2_doc.DocumentNode.SelectNodes("//span[@class='seln-short-name']").First().InnerText;
-                        if (type == "1")
+                        string type = node2_doc.DocumentNode.SelectNodes("//span[@class='seln-short-name' or @class='seln-name']").First().InnerText;
+
+                        if (type == "1" || type.Contains(matchName.FirstTeam))
                         {
                             result = new HandicapBet(HandicapBetType.F1, param, time, Probability, matchName, BetUrl, JavaSelectCode, sport, Maker);
                         }
-                        if (type == "2")
+                        if (type == "2" || type.Contains(matchName.SecondTeam))
                         {
                             result = new HandicapBet(HandicapBetType.F2, param, time, Probability, matchName, BetUrl, JavaSelectCode, sport, Maker);
                         }
@@ -283,6 +291,26 @@ namespace BookmakerParser
         {
             TimeType type = TimeType.AllGame;
             int value = 0;
+            if(main_type.Contains("Set Winner"))
+            {
+            if (main_type.Contains("1") || main_type.Contains("First"))
+                    value = 1;
+                else
+            if (main_type.Contains("2") || main_type.Contains("Second"))
+                    value = 2;
+                else
+            if (main_type.Contains("3") || main_type.Contains("Third"))
+                    value = 3;
+                else
+            if (main_type.Contains("4") || main_type.Contains("Fourth"))
+                    value = 4;
+            else
+                if (main_type.Contains("5") || main_type.Contains("Fifth"))
+                    value = 5;
+                type = TimeType.Set;
+                return new Time(type, value);
+            }
+
             if (!main_type.Contains("1st") && !main_type.Contains("2nd") && !main_type.Contains("3rd") && !main_type.Contains("4th"))
                 return new Time(TimeType.AllGame);
             else
@@ -297,6 +325,7 @@ namespace BookmakerParser
             else
             if (main_type.Contains("4th") || main_type.Contains("Fourth"))
                 value = 4;
+            else
             if (main_type.Contains("5th") || main_type.Contains("Fifth"))
                 value = 5;
             if (main_type.Contains("Half"))
