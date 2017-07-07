@@ -11,6 +11,7 @@ using BookmakerParser;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Threading.Tasks;
+using System.Threading;
 
 namespace ArbitrageService
 {
@@ -23,8 +24,9 @@ namespace ArbitrageService
         ArbitrageFinder finder;
         List<ArbitrageBet> forkList = new List<ArbitrageBet>();
         object lockobj = new object();
+        Task task;
         public ArbitrageBetService()
-        {
+        {/*
             try
             {
                 CefSharp.CefSettings settings = new CefSharp.CefSettings();
@@ -32,40 +34,48 @@ namespace ArbitrageService
                // settings.BrowserSubprocessPath = System.IO.Path.Combine(cefPath, "CefSharp.BrowserSubprocess.exe");
                 CefSharp.Cef.Initialize(settings, performDependencyCheck: true, browserProcessHandler: null);
             }catch(Exception ex) { Console.WriteLine(ex.Message); }
-
+            */
 
             finder = new ArbitrageFinder();
 
             Marathonbet marathonbet = new Marathonbet();
-            LeonBets leon = new LeonBets();
+        //    LeonBets leon = new LeonBets();
             OlimpBookmaker olimp = new OlimpBookmaker();
             TitanBet titan = new TitanBet();
 
-            //finder.AddBookmaker(marathonbet);
-            finder.AddBookmaker(leon);
-           // finder.AddBookmaker(olimp);
+            finder.AddBookmaker(marathonbet);
+           // finder.AddBookmaker(leon);
+            finder.AddBookmaker(olimp);
             finder.AddBookmaker(titan);
+         //   var newForks = finder.GetForks();
 
-            new Task(() =>
+            try
             {
-                while (true)
+                //Thread thread = new Thread();
+                task = Task.Factory.StartNew(() =>
                 {
-
-                    var newForks = finder.GetForks();
-
-                    lock (lockobj)
+                    try
                     {
-                        forkList = newForks;
-                    }
+                        while (true)
+                        {
+                           // Console.WriteLine("here");
+                            var newForks = finder.GetForks();
 
-                    Task.Delay(4000).Wait();
-                }
-            }).Start();
+                            lock (lockobj)
+                            {
+                                forkList = newForks;
+                            }
+                            Thread.Sleep(4000);
+                        }
+                    } catch(Exception ex) { Console.WriteLine(ex); }
+                }, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);
 
-            
-            
+              //  task.Start();
+            } catch(Exception ex) { Console.WriteLine(ex.Message); }
+           
+            task.ContinueWith((e) => Console.WriteLine("closed"));
         }
-
+        
         public void Dispose()
         {
             CefSharp.Cef.Shutdown();
@@ -81,7 +91,8 @@ namespace ArbitrageService
             double MinProfit = o1["MinProfit"].ToObject<double>();
 
             List<ArbitrageBet> forks;
-            Console.WriteLine(string.Join("\n", forkList));
+            Console.WriteLine("Current forks count: {0}", forkList.Count);
+          //  Console.WriteLine(task);
             lock (lockobj)
             {
                 forks = forkList.Where(bet => Bookmakers.Contains(bet.Bookmaker) && Sports.Contains(bet.Sport) && MinProfit <= bet.Profit).ToList();

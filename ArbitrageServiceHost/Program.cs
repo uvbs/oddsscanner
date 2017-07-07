@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.ServiceModel;
 using ArbitrageService;
 using System.ServiceModel.Description;
+using System.Runtime.Serialization;
 
 namespace ArbitrageServiceHost
 {
@@ -25,7 +26,14 @@ namespace ArbitrageServiceHost
                 binding.CloseTimeout = new TimeSpan(0, 20, 0);
                 binding.SendTimeout = new TimeSpan(0, 20, 0);
                 binding.ReceiveTimeout = new TimeSpan(0, 20, 0);
+                binding.MaxBufferPoolSize = 2147483647;
+                binding.MaxBufferSize = 2147483647;
                 binding.MaxReceivedMessageSize = 2147483647;
+                var quotas = new System.Xml.XmlDictionaryReaderQuotas();
+                quotas.MaxDepth = 32;
+                quotas.MaxArrayLength = 2147483647;
+                quotas.MaxStringContentLength = 2147483647;
+                binding.ReaderQuotas = quotas;
 
                 arbitrageServiceHost.Description.Endpoints.Clear();
                 arbitrageServiceHost.AddServiceEndpoint(typeof(IArbitrageService), binding, "");

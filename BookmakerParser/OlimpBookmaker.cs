@@ -5,6 +5,7 @@ using BetsLibrary;
 using CefSharp.OffScreen;
 using CefSharp;
 using HtmlAgilityPack;
+using System.Threading.Tasks;
 
 namespace BookmakerParser
 {
@@ -12,7 +13,7 @@ namespace BookmakerParser
     {
         private string MatchListUrl = "https://www.olimp.kz/betting";
 
-        private const int MaximumMatches = 10;
+        private const int MaximumMatches = 100;
         
         List<string> activeMatchList = new List<string>();
         private const Bookmaker Maker = Bookmaker.Olimp;
@@ -29,10 +30,20 @@ namespace BookmakerParser
                 index++;
             }
             BetList = new List<Bet>();
+
+            var tasks = new List<Task>();
+            int taskCount = 0;
+
             foreach (var match in activeMatchList)
             {
-                ParseMatch(match);
+                tasks.Add(Task.Factory.StartNew(() => ParseMatch(match)));
+                taskCount++;
+                if (taskCount > 10) { Task.WaitAll(tasks.ToArray()); taskCount = 0; }
             }
+
+            Task.WaitAll(tasks.ToArray());
+
+            Console.WriteLine("Olimp parsed {0} bets at {1}", BetList.Count, DateTime.Now);
         }
         
 
@@ -62,7 +73,7 @@ namespace BookmakerParser
 
                 string url = "https://www.olimp.kz/" + hrefNode.Value;
                 url = url.Replace("amp;", "");
-                Console.WriteLine(url);
+           //     Console.WriteLine(url);
 
                 activeMatchList.Add(url);
                 
@@ -80,7 +91,14 @@ namespace BookmakerParser
                 request.Headers.Add("Accept-Language", "en-US");
                 return true;
             };
-            HtmlDocument doc = web.Load(url);
+            var proxy = ProxyList.GetRandomProxy();
+            HtmlDocument doc;
+
+            try
+            {
+                doc = web.Load(url, proxy.ip, proxy.port, proxy.login, proxy.password);
+            }
+            catch { return; }
 
             MatchName matchName = GetMatchName(doc);
             if (matchName == null) return;
@@ -119,8 +137,8 @@ namespace BookmakerParser
 
                         if (betParams[2] == "2" || betParams[2] == "9" || betParams[2] == "22") // 1, 2 all game
                         {
-                            if (betParams[4] == "1") result = new ResultBet(ResultBetType.First, time, odds, matchName, BetUrl, JavaSelectCode, sport, Maker);
-                            if (betParams[4] == "2") result = new ResultBet(ResultBetType.Second, time, odds, matchName, BetUrl, JavaSelectCode, sport, Maker);
+                            if (betParams[4] == "1") result = new ResultBet(ResultBetType.P1, time, odds, matchName, BetUrl, JavaSelectCode, sport, Maker);
+                            if (betParams[4] == "2") result = new ResultBet(ResultBetType.P2, time, odds, matchName, BetUrl, JavaSelectCode, sport, Maker);
                         }
 
                         if(betParams[2] == "3") // 1x, 12, x2 all game
@@ -208,7 +226,7 @@ namespace BookmakerParser
             }*/
 
             #endregion
-            System.Threading.Thread.Sleep(500);
+            System.Threading.Thread.Sleep(50);
         }
 
 

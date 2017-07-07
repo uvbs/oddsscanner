@@ -21,9 +21,14 @@ namespace OddsAnalyzer
         public void Refresh()
         {
             analyzerDict = new Dictionary<Bet, BetAnalyzer>();
+            var tasks = new List<Task>();
             foreach (var bookmaker in bookmakerList)
             {
-                bookmaker.Parse();
+                tasks.Add(Task.Factory.StartNew(() => bookmaker.Parse()));
+            }
+            Task.WaitAll(tasks.ToArray());
+            foreach (var bookmaker in bookmakerList)
+            {
                 var betList = bookmaker.GetBetList();
                 foreach(var bet in betList)
                 {

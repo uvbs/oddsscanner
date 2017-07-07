@@ -16,6 +16,7 @@ using System.Media;
 using BetsLibrary;
 using CefSharp.Wpf;
 using Newtonsoft.Json;
+using System.ServiceModel;
 
 namespace Arbitrage_Client
 {
@@ -72,31 +73,32 @@ namespace Arbitrage_Client
                list.Add(new ArbitrageBet(null, 1, 1));
                BetsList.ItemsSource = list;*/
 
-            ForkService.ArbitrageServiceClient client = new ForkService.ArbitrageServiceClient();
+            BasicHttpBinding binding = new BasicHttpBinding();
+            binding.OpenTimeout = new TimeSpan(0, 20, 0);
+            binding.CloseTimeout = new TimeSpan(0, 20, 0);
+            binding.SendTimeout = new TimeSpan(0, 20, 0);
+            binding.ReceiveTimeout = new TimeSpan(0, 20, 0);
+            binding.MaxBufferPoolSize = 2147483647;
+            binding.MaxBufferSize = 2147483647;
+            binding.MaxReceivedMessageSize = 2147483647;
+            ForkService.ArbitrageServiceClient client = new ForkService.ArbitrageServiceClient(binding, new EndpointAddress("http://localhost:49359/ArbitrageService"));
             
             var task = new Task(() =>
             {
                 while (true)
                 {
-                    try
-                    {
                         string result = client.GetArbitrageList(FilterSettings.GetJsonString());
-
-
-                    
                     
                         List<ArbitrageBet> newList = JsonConvert.DeserializeObject<List<ArbitrageBet>>(result, new JsonSerializerSettings
                         {
                             TypeNameHandling = TypeNameHandling.All
                         });
                     Sync(newList);
-                    }
-                    catch { }
                     
 
                     
 
-                    Task.Delay(1000).Wait();
+                    Task.Delay(2000).Wait();
                 }
             });
 

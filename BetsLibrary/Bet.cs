@@ -28,6 +28,8 @@ namespace BetsLibrary
 
     public enum ResultBetType
     {
+        P1,
+        P2,
         First,
         Draw,
         Second,
@@ -60,31 +62,16 @@ namespace BetsLibrary
             switch (ResultBetType)
             {
                 case ResultBetType.First:
-                    if (Sport == Sport.Football)
-                    {
-                        result.Add(new ResultBet(ResultBetType.SecondOrDraw, Time, Odds, MatchName, BetUrl, JavaScriptSelectorCode, Sport, Bookmaker));
-                        result.Add(new HandicapBet(HandicapBetType.F2, 0.5, Time, Odds, MatchName, BetUrl, JavaScriptSelectorCode, Sport,Bookmaker));
-                    }
-                    else
-                    {
-                        result.Add(new ResultBet(ResultBetType.Second, Time, Odds, MatchName, BetUrl, JavaScriptSelectorCode, Sport, Bookmaker));
-                        result.Add(new HandicapBet(HandicapBetType.F2, 0, Time, Odds, MatchName, BetUrl, JavaScriptSelectorCode, Sport, Bookmaker));
-                    }
+                    result.Add(new ResultBet(ResultBetType.SecondOrDraw, Time, Odds, MatchName, BetUrl, JavaScriptSelectorCode, Sport, Bookmaker));
+                    result.Add(new HandicapBet(HandicapBetType.F2, 0.5, Time, Odds, MatchName, BetUrl, JavaScriptSelectorCode, Sport, Bookmaker));
                     break;
                 case ResultBetType.Draw:
-                        result.Add(new ResultBet(ResultBetType.FirstOrSecond, Time, Odds, MatchName, BetUrl, JavaScriptSelectorCode, Sport, Bookmaker));
+                    result.Add(new ResultBet(ResultBetType.FirstOrSecond, Time, Odds, MatchName, BetUrl, JavaScriptSelectorCode, Sport, Bookmaker));
                     break;
                 case ResultBetType.Second:
                     if (Sport == Sport.Football)
-                    {
                         result.Add(new ResultBet(ResultBetType.FirstOrDraw, Time, Odds, MatchName, BetUrl, JavaScriptSelectorCode, Sport, Bookmaker));
                         result.Add(new HandicapBet(HandicapBetType.F1, 0.5, Time, Odds, MatchName, BetUrl, JavaScriptSelectorCode, Sport, Bookmaker));
-                    }
-                    else
-                    {
-                        result.Add(new ResultBet(ResultBetType.First, Time, Odds, MatchName, BetUrl, JavaScriptSelectorCode, Sport, Bookmaker));
-                        result.Add(new HandicapBet(HandicapBetType.F1, 0, Time, Odds, MatchName, BetUrl, JavaScriptSelectorCode, Sport, Bookmaker));
-                    }
                     break;
                 case ResultBetType.FirstOrDraw:
                     result.Add(new ResultBet(ResultBetType.Second, Time, Odds, MatchName, BetUrl, JavaScriptSelectorCode, Sport, Bookmaker));
@@ -99,8 +86,16 @@ namespace BetsLibrary
                     result.Add(new HandicapBet(HandicapBetType.F1, -0.5, Time, Odds, MatchName, BetUrl, JavaScriptSelectorCode, Sport, Bookmaker));
                     result.Add(new HandicapBet(HandicapBetType.F1, 0, Time, Odds, MatchName, BetUrl, JavaScriptSelectorCode, Sport, Bookmaker));
                     break;
+                case ResultBetType.P1:
+                    result.Add(new ResultBet(ResultBetType.Second, Time, Odds, MatchName, BetUrl, JavaScriptSelectorCode, Sport, Bookmaker));
+                    result.Add(new HandicapBet(HandicapBetType.F2, 0, Time, Odds, MatchName, BetUrl, JavaScriptSelectorCode, Sport, Bookmaker));
+                    break;
+                case ResultBetType.P2:
+                    result.Add(new ResultBet(ResultBetType.First, Time, Odds, MatchName, BetUrl, JavaScriptSelectorCode, Sport, Bookmaker));
+                    result.Add(new HandicapBet(HandicapBetType.F1, 0, Time, Odds, MatchName, BetUrl, JavaScriptSelectorCode, Sport, Bookmaker));
+                    break;
             }
-            
+
             return result;
         }
 

@@ -116,8 +116,8 @@ namespace oddsscanner
 
 
             for (int i = 0; i < 100; i++) {
-                titan.Parse();
-                Console.WriteLine(titan.GetBetList().Count);
+                marathon.Parse();
+                Console.WriteLine(marathon.GetBetList().Count);
                 Thread.Sleep(2000);
             }
 

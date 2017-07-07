@@ -5,7 +5,7 @@ using BetsLibrary;
 using CefSharp.OffScreen;
 using CefSharp;
 using HtmlAgilityPack;
-
+using System.Threading.Tasks;
 namespace BookmakerParser
 {
     public class Marathonbet : BetsLibrary.BookmakerParser
@@ -27,17 +27,17 @@ namespace BookmakerParser
 
         // iceHockey не можу знайти силку в лайві його не має і не буде до 2018 ... 
         //
-        private const int MaximumMatches = 10;
-        
+        private const int MaximumMatches = 100;
+
         List<string> activeMatchList = new List<string>();
-      //  private ChromiumWebBrowser[] matchListBrowser;
+        //  private ChromiumWebBrowser[] matchListBrowser;
         private const Bookmaker Maker = Bookmaker.Marathonbet;
         string JavaSelectCode = "Java";
         public Marathonbet()
         {
 
         }
-        
+
         public override void Parse()
         {
             int index = 0;
@@ -50,13 +50,22 @@ namespace BookmakerParser
             }
             BetList = new List<Bet>();
 
+            var tasks = new List<Task>();
+            int taskCount = 0;
+
             foreach (var match in activeMatchList)
             {
-                ParseMatch(match);
+                tasks.Add(Task.Factory.StartNew(() => ParseMatch(match)));
+                taskCount++;
+                if (taskCount > 10) { Task.WaitAll(tasks.ToArray()); taskCount = 0; }
             }
 
+            Task.WaitAll(tasks.ToArray());
+
+            Console.WriteLine("Marathon parsed {0} betsv at {1}", BetList.Count, DateTime.Now);
+
         }
-        
+
         public void ParseMatchList(int index)
         {
             HtmlWeb web = new HtmlWeb();
@@ -75,7 +84,7 @@ namespace BookmakerParser
                 //   if (!browserDict.ContainsKey(id))
                 //  {
                 string url = "https://www.marathonbet.com/en/live/" + id;
-                Console.WriteLine(url);
+             //   Console.WriteLine(url);
                 activeMatchList.Add(url);
                 // System.Threading.Thread.Sleep(5000);
                 //    }
@@ -87,8 +96,15 @@ namespace BookmakerParser
         private void ParseMatch(string url)
         {
             HtmlWeb web = new HtmlWeb();
-            HtmlDocument doc = web.Load(url);
+            var proxy = ProxyList.GetRandomProxy();
+            //  Console.WriteLine(DateTime.Now +"s");
+            HtmlDocument doc;
 
+            try
+            {
+                doc = web.Load(url/*, proxy.ip, proxy.port, proxy.login, proxy.password*/);
+            } catch { return; }
+           // Console.WriteLine(DateTime.Now + "e");
             Sport sport = GetSport(doc);
             if (sport == Sport.NotSupported) return;
 
@@ -104,11 +120,11 @@ namespace BookmakerParser
             foreach (var node in betsNodes)
             {
                 result = null;
-                if (node.Attributes["data-market-type"] != null) continue;
+                //if (node.Attributes["data-market-type"] != null) continue;
                 HtmlAttribute attribute = node.Attributes["data-sel"];
                 if (attribute == null) continue;
                 string value = attribute.Value.Replace("\"", string.Empty);
-                
+
                 string coeff = value.Split(new string[] { ",epr:", ",prices:{" }, StringSplitOptions.RemoveEmptyEntries)[1];
 
                 double Probability = Convert.ToDouble(coeff.Replace(".", ","));
@@ -124,13 +140,23 @@ namespace BookmakerParser
                 if (TotalorHand.Contains("Match Result") || TotalorHand == "Result")
                 {
                     if (type == matchName.FirstTeam + " To Win")
-                        result = new ResultBet(ResultBetType.First, time, Probability, matchName, BetUrl, JavaSelectCode, sport, Maker);
+                    {
+                        if (node.Attributes["data-market-type"] != null && node.Attributes["data-market-type"].Value == "RESULT_2WAY")
+                            result = new ResultBet(ResultBetType.P1, time, Probability, matchName, BetUrl, JavaSelectCode, sport, Maker);
+                        else
+                            result = new ResultBet(ResultBetType.First, time, Probability, matchName, BetUrl, JavaSelectCode, sport, Maker);
+                    }
                     else
                     if (type == "Draw")
                         result = new ResultBet(ResultBetType.Draw, time, Probability, matchName, BetUrl, JavaSelectCode, sport, Maker);
                     else
                     if (type == matchName.SecondTeam + " To Win")
-                        result = new ResultBet(ResultBetType.Second, time, Probability, matchName, BetUrl, JavaSelectCode, sport, Maker);
+                    {
+                        if (node.Attributes["data-market-type"] != null && node.Attributes["data-market-type"].Value == "RESULT_2WAY")
+                            result = new ResultBet(ResultBetType.P2, time, Probability, matchName, BetUrl, JavaSelectCode, sport, Maker);
+                        else
+                            result = new ResultBet(ResultBetType.Second, time, Probability, matchName, BetUrl, JavaSelectCode, sport, Maker);
+                    }
                     else
                     if (type == matchName.FirstTeam + " To Win or Draw")
                         result = new ResultBet(ResultBetType.FirstOrDraw, time, Probability, matchName, BetUrl, JavaSelectCode, sport, Maker);
