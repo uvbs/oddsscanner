@@ -24,78 +24,42 @@ namespace BookmakerParser
                 return result;
             }
         }
-        const string switch_mobile = "http://sports.titanbet.com/web_nr?key=do_switch_platform&platform=mobile";
-        private const int MaximumMatches = 15;
+        //const string switch_mobile = "http://sports.titanbet.com/web_nr?key=do_switch_platform&platform=mobile";
+        private const int MaximumMatches = 10;
 
-        private Dictionary<string, ChromiumWebBrowser> browserDict = new Dictionary<string, ChromiumWebBrowser>();
+       // private Dictionary<string, ChromiumWebBrowser> browserDict = new Dictionary<string, ChromiumWebBrowser>();
         List<string> activeMatchList = new List<string>();
-        private ChromiumWebBrowser[] matchListBrowser;
+      //  private ChromiumWebBrowser[] matchListBrowser;
         private const Bookmaker Maker = Bookmaker.Titanbet;
         string JavaSelectCode = "Java";
         public TitanBet()
         {
 
         }
-        private void LoadMobile()
-        {
-            matchListBrowser = new ChromiumWebBrowser[MatchListUrl.Length + 1];
-            matchListBrowser[0] = new ChromiumWebBrowser(switch_mobile);
-
-        }
-        private void LoadMatchListPages()
-        {
-            for (int i = 1; i < MatchListUrl.Length + 1; i++)
-                matchListBrowser[i] = new ChromiumWebBrowser(MatchListUrl[i - 1]);
-        }
 
         public override void Parse()
         {
-            if (matchListBrowser == null)
-            {
-                LoadMobile();
-            }
-
-            if (!matchListBrowser[0].IsBrowserInitialized || matchListBrowser[0].IsLoading) return;
-
-            if (matchListBrowser[1] == null)
-            {
-                LoadMatchListPages();
-            }
-
-            for (int i = 0; i < MatchListUrl.Length + 1; i++)
-                if (!matchListBrowser[i].IsBrowserInitialized || matchListBrowser[i].IsLoading) return;
-
-
-            int index = 1;
+            int index = 0;
             activeMatchList = new List<string>();
-            while (activeMatchList.Count < MaximumMatches && index < matchListBrowser.Length)
+            while (activeMatchList.Count < MaximumMatches && index < MatchListUrl.Length)
             {
                 ParseMatchList(index);
                 index++;
             }
             BetList = new List<Bet>();
-            DeleteNotActiveMatch();
 
-            foreach (var match in browserDict)
+            foreach (var match in activeMatchList)
             {
-                ParseMatch(match.Value);
+                ParseMatch(match);
             }
 
         }
 
-        public void DeleteNotActiveMatch()
-        {
-            var notActiveMatchArray = browserDict.Where(e => !activeMatchList.Contains(e.Key)).Select(e => e.Key).ToArray();
-
-            foreach (var key in notActiveMatchArray)
-                browserDict.Remove(key);
-        }
-
         public void ParseMatchList(int index)
         {
-            string html = matchListBrowser[index].GetSourceAsync().Result;
-            HtmlDocument doc = new HtmlDocument();
-            doc.LoadHtml(html);
+            var web = new HtmlWeb();
+            web.UserAgent = "Mozilla/5.0 (Linux; U; Android 4.0.3; ko-kr; LG-L160L Build/IML74K) AppleWebkit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30";
+            HtmlDocument doc = web.Load(MatchListUrl[index]);
 
             HtmlNodeCollection liveList = doc.DocumentNode.SelectNodes("//div[@class='evs']");
 
@@ -114,36 +78,25 @@ namespace BookmakerParser
 
             foreach (var node in matchNodes)
             {
-
                 string id = String.Empty;
-
                 id = node.Attributes["data-ev_id"].Value;
-                activeMatchList.Add(id);
 
+                string additional_url = node.Attributes["href"].Value;
+                string url = "https://m.titanbet.com/" + additional_url;
+                Console.WriteLine(url);
 
-                if (!browserDict.ContainsKey(id))
-                {
-                    string additional_url = node.Attributes["href"].Value;
-                    string url = "https://m.titanbet.com/" + additional_url;
-                    Console.WriteLine(url);
-                    browserDict.Add(id, new ChromiumWebBrowser(url));
-                    System.Threading.Thread.Sleep(5000);
-                }
+                activeMatchList.Add(url);
+                
                 if (activeMatchList.Count == MaximumMatches) break;
             }
 
         }
 
-        private void ParseMatch(ChromiumWebBrowser browser)
+        private void ParseMatch(string url)
         {
-            if (!browser.IsBrowserInitialized || browser.IsLoading)
-                return;
-            var task = browser.GetSourceAsync();
-            task.Wait(2000);
-            if (!task.IsCompleted) return;
-            string html = task.Result;
-            HtmlDocument doc = new HtmlDocument();
-            doc.LoadHtml(html);
+            var web = new HtmlWeb();
+            web.UserAgent = "Mozilla/5.0 (Linux; U; Android 4.0.3; ko-kr; LG-L160L Build/IML74K) AppleWebkit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30";
+            HtmlDocument doc = web.Load(url);
 
             Sport sport = GetSport(doc);
             if (sport == Sport.NotSupported) return;
@@ -151,7 +104,7 @@ namespace BookmakerParser
             MatchName matchName = GetMatchName(doc);
             if (matchName == null) return;
 
-            string BetUrl = browser.Address;
+            string BetUrl = url;
 
             HtmlNodeCollection betsNodes = doc.DocumentNode.SelectNodes("//div[@class and @data-mkt_id]");
 
@@ -299,13 +252,15 @@ namespace BookmakerParser
 
 
             }
+
+            /*
             foreach (var output in BetList)
             {
                 Console.WriteLine();
                 Console.Write("{0} vs {1}   ", output.MatchName.FirstTeam, output.MatchName.SecondTeam);
                 Console.Write("{0} ", output);
                 Console.Write("coef: {0}", output.Odds);
-            }
+            }*/
 
 
 

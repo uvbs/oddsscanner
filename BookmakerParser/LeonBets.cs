@@ -13,7 +13,7 @@ namespace BookmakerParser
     {
         private string MatchListUrl = "https://mobile.leonbets.net/mobile/#liveEvents";
 
-        private const int MaximumMatches = 15;
+        private const int MaximumMatches = 10;
 
         private Dictionary<string, ChromiumWebBrowser> browserDict = new Dictionary<string, ChromiumWebBrowser>();
         List<string> activeMatchList = new List<string>();
@@ -308,13 +308,14 @@ namespace BookmakerParser
 
 
             }
+            /*
             foreach (var output in BetList)
             {
                 Console.WriteLine();
                 Console.Write("{0} vs {1}   ", output.MatchName.FirstTeam, output.MatchName.SecondTeam);
                 Console.Write("{0} ", output);
                 Console.Write("coef: {0}", output.Odds);
-            }
+            }*/
             System.Threading.Thread.Sleep(500);
         }
 

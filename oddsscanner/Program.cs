@@ -20,7 +20,7 @@ namespace oddsscanner
     {
 
         public static void Main(string[] args)
-        {
+        {/*
             ArbitrageFinder finder = new ArbitrageFinder();
 
             OlimpBookmaker olimp = new OlimpBookmaker();
@@ -94,14 +94,32 @@ namespace oddsscanner
             }
             */
 
-           //   result = finder.GetArbitrageBets();
+            //   result = finder.GetArbitrageBets();
 
-              Console.WriteLine(finder);
+            //     Console.WriteLine(finder);
 
-          //  MatchName name1 = new MatchName("Ukraine Dinamo (U-21)", "Russia");
-          //  MatchName name2 = new MatchName("D/Ukr U21", "Russia A");
+            //  MatchName name1 = new MatchName("Ukraine Dinamo (U-21)", "Russia");
+            //  MatchName name2 = new MatchName("D/Ukr U21", "Russia A");
 
-          //  Console.WriteLine(name1.Equals(name2));
+            //  Console.WriteLine(name1.Equals(name2));
+
+            /*var web = new HtmlWeb();
+            web.UserAgent = "Mozilla/5.0 (Linux; U; Android 4.0.3; ko-kr; LG-L160L Build/IML74K) AppleWebkit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30";
+           // var doc = web.Load("http://sports.titanbet.com/web_nr?key=do_switch_platform&amp;platform=mobile");
+            var doc = web.Load("https://m.10bet.com/?#home");
+
+            Console.WriteLine(doc.DocumentNode.OuterHtml);*/
+
+            Marathonbet marathon = new Marathonbet();
+            OlimpBookmaker olimp = new OlimpBookmaker();
+            TitanBet titan = new TitanBet();
+
+
+            for (int i = 0; i < 100; i++) {
+                titan.Parse();
+                Console.WriteLine(titan.GetBetList().Count);
+                Thread.Sleep(2000);
+            }
 
             Console.ReadLine();
 

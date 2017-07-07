@@ -12,28 +12,15 @@ namespace BookmakerParser
     {
         private string MatchListUrl = "https://www.olimp.kz/betting";
 
-        private const int MaximumMatches = 15;
-
-        private Dictionary<string, ChromiumWebBrowser> browserDict = new Dictionary<string, ChromiumWebBrowser>();
+        private const int MaximumMatches = 10;
+        
         List<string> activeMatchList = new List<string>();
-        private ChromiumWebBrowser matchListBrowser;
         private const Bookmaker Maker = Bookmaker.Olimp;
         string JavaSelectCode = "Java";
         string[] type_of_sport = { "1", "5", "3", "10" }; // 1- football, 5 - basketball, 3 - tennis, 10 volleyball
 
-        private void LoadMatchListPages()
-        {
-            matchListBrowser = new ChromiumWebBrowser(MatchListUrl);
-        }
-
-
         public override void Parse()
         {
-            if (matchListBrowser == null)
-                LoadMatchListPages();
-
-            if (!matchListBrowser.IsBrowserInitialized || matchListBrowser.IsLoading) return;
-
             int index = 0;
             activeMatchList = new List<string>();
             while (activeMatchList.Count < MaximumMatches && index < type_of_sport.Length)
@@ -42,33 +29,20 @@ namespace BookmakerParser
                 index++;
             }
             BetList = new List<Bet>();
-            DeleteNotActiveMatch();
-            foreach (var match in browserDict)
+            foreach (var match in activeMatchList)
             {
-                ParseMatch(match.Value);
+                ParseMatch(match);
             }
-
         }
-
-        public void DeleteNotActiveMatch()
-        {
-            var notActiveMatchArray = browserDict.Where(e => !activeMatchList.Contains(e.Key)).Select(e => e.Key).ToArray();
-
-            foreach (var key in notActiveMatchArray)
-                browserDict.Remove(key);
-        }
+        
 
         public void ParseMatchList(int index)
         {
-            var task = matchListBrowser.GetSourceAsync();
-            task.Wait(2000);
-            if (!task.IsCompleted) return;
-            string html = task.Result;
-            HtmlDocument doc = new HtmlDocument();
-            doc.LoadHtml(html);
+            HtmlWeb web = new HtmlWeb();
+            HtmlDocument doc = web.Load(MatchListUrl);
 
-        //    Console.WriteLine(html);
-           
+            //    Console.WriteLine(html);
+
             HtmlNodeCollection matchList = doc.DocumentNode.SelectNodes(string.Format("//tr[@data-sport='{0}']", type_of_sport[index]));
 
 
@@ -86,34 +60,27 @@ namespace BookmakerParser
                 string id = idNode.Value;
                 if (!id.Contains("match_live_name")) continue;
 
-                activeMatchList.Add(id);
+                string url = "https://www.olimp.kz/" + hrefNode.Value;
+                url = url.Replace("amp;", "");
+                Console.WriteLine(url);
 
-                if (!browserDict.ContainsKey(id))
-                {
-                    string url = "https://www.olimp.kz/" + hrefNode.Value;
-                    url = url.Replace("amp;", "");
-                    Console.WriteLine(url);
-                    browserDict.Add(id, new ChromiumWebBrowser(url));
-                    System.Threading.Thread.Sleep(5000);
-                }
+                activeMatchList.Add(url);
+                
                 if (activeMatchList.Count == MaximumMatches) break;
             }
 
         }
         
-        private void ParseMatch(ChromiumWebBrowser browser)
+        private void ParseMatch(string url)
         {
 
-            if (!browser.IsBrowserInitialized || browser.IsLoading)
-                return;
-
-            var task = browser.GetSourceAsync();
-            task.Wait(2000);
-            if (!task.IsCompleted) return;
-            string html = task.Result;
-
-            HtmlDocument doc = new HtmlDocument();
-            doc.LoadHtml(html);
+            HtmlWeb web = new HtmlWeb();
+            web.PreRequest+= (request) =>
+            {
+                request.Headers.Add("Accept-Language", "en-US");
+                return true;
+            };
+            HtmlDocument doc = web.Load(url);
 
             MatchName matchName = GetMatchName(doc);
             if (matchName == null) return;
@@ -121,7 +88,7 @@ namespace BookmakerParser
             if (sport == Sport.NotSupported) return;
 
 
-            string BetUrl = browser.Address;
+            string BetUrl = url;
 
 
             Bet result = null;
@@ -231,13 +198,14 @@ namespace BookmakerParser
 
             }
             #region code
+            /*
             foreach (var output in BetList)
             {
                 Console.WriteLine();
                 Console.Write("{0} vs {1}   ", output.MatchName.FirstTeam, output.MatchName.SecondTeam);
                 Console.Write("{0} ", output);
                 Console.Write("coef: {0}", output.Odds);
-            }
+            }*/
 
             #endregion
             System.Threading.Thread.Sleep(500);

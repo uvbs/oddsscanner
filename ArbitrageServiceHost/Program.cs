@@ -45,7 +45,7 @@ namespace ArbitrageServiceHost
                 arbitrageServiceHost = null;
                 Console.WriteLine("There is an issue with ArbitrageService" + ex.Message);
             }
-
+            
             Console.ReadKey();
         }
     }

@@ -25,6 +25,7 @@ namespace OddsAnalyzer
                     foreach(var possibleBet in possiblesBets.bets)
                     {
                         double profit = 1 - ((1 / bet.Odds) + (1 / possibleBet.Odds));
+                        if (profit < -0.03) continue;
                         string type = string.Format("{0} - {1}", bet, possibleBet);
 
                         profit = Math.Round(profit * 100, 2);

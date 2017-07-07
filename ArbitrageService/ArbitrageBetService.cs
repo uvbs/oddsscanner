@@ -18,13 +18,22 @@ namespace ArbitrageService
     // NOTE: In order to launch WCF Test Client for testing this service, please select Service1.svc or Service1.svc.cs at the Solution Explorer and start debugging.
 
     [ServiceBehavior(ConcurrencyMode = ConcurrencyMode.Single, InstanceContextMode = InstanceContextMode.Single)]
-    public class ArbitrageBetService : IArbitrageService
+    public class ArbitrageBetService : IArbitrageService,IDisposable
     {
         ArbitrageFinder finder;
         List<ArbitrageBet> forkList = new List<ArbitrageBet>();
         object lockobj = new object();
         public ArbitrageBetService()
         {
+            try
+            {
+                CefSharp.CefSettings settings = new CefSharp.CefSettings();
+                settings.LogSeverity = CefSharp.LogSeverity.Error;
+               // settings.BrowserSubprocessPath = System.IO.Path.Combine(cefPath, "CefSharp.BrowserSubprocess.exe");
+                CefSharp.Cef.Initialize(settings, performDependencyCheck: true, browserProcessHandler: null);
+            }catch(Exception ex) { Console.WriteLine(ex.Message); }
+
+
             finder = new ArbitrageFinder();
 
             Marathonbet marathonbet = new Marathonbet();
@@ -32,9 +41,9 @@ namespace ArbitrageService
             OlimpBookmaker olimp = new OlimpBookmaker();
             TitanBet titan = new TitanBet();
 
-            finder.AddBookmaker(marathonbet);
+            //finder.AddBookmaker(marathonbet);
             finder.AddBookmaker(leon);
-            finder.AddBookmaker(olimp);
+           // finder.AddBookmaker(olimp);
             finder.AddBookmaker(titan);
 
             new Task(() =>
@@ -49,12 +58,17 @@ namespace ArbitrageService
                         forkList = newForks;
                     }
 
-                    Task.Delay(1000).Wait();
+                    Task.Delay(4000).Wait();
                 }
             }).Start();
 
             
             
+        }
+
+        public void Dispose()
+        {
+            CefSharp.Cef.Shutdown();
         }
 
         public string GetArbitrageList(string filter)
