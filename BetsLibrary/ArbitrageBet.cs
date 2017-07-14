@@ -8,25 +8,23 @@ namespace BetsLibrary
 {
     public class ArbitrageBet
     {
-        public Bet Bet { get; private set; }
-        public string ForkType { get; private set; }
-        public double Profit { get; private set; }
+        public Bet MainBet { get; private set; }
+        public Bet SecondBet { get; private set; }
 
-        public Bookmaker Bookmaker => Bet.Bookmaker;
-        public MatchName MatchName => Bet.MatchName;
-        public double Coeff => Bet.Odds;
-        public Sport Sport => Bet.Sport;
 
-        public ArbitrageBet(Bet Bet, string ForkType, double Profit)
+        public double Profit => Math.Round(100 - (100 / MainBet.Odds) - (100 / SecondBet.Odds), 2);
+        public MatchName MatchName => MainBet.MatchName;
+        public Sport Sport => MainBet.Sport;
+
+        public ArbitrageBet(Bet MainBet, Bet SecondBet)
         {
-            this.Bet = Bet;
-            this.ForkType = ForkType;
-            this.Profit = Profit;
+            this.MainBet = MainBet;
+            this.SecondBet = SecondBet;
         }
 
         public override int GetHashCode()
         {
-            return Bet.GetHashCode() ^ Profit.GetHashCode() ^ ForkType.GetHashCode();
+            return Profit.GetHashCode();
         }
 
         public override bool Equals(object obj)
@@ -40,12 +38,9 @@ namespace BetsLibrary
 
         public bool Equals(ArbitrageBet bet)
         {
-            return bet.Bet.Equals(Bet) && bet.Bookmaker == Bookmaker && bet.Coeff == Coeff && bet.Coeff == Coeff && bet.Profit == Profit && bet.ForkType == ForkType;
+            return ((bet.MainBet.Equals(MainBet) && bet.MainBet.Bookmaker == MainBet.Bookmaker && bet.MainBet.Odds == MainBet.Odds && bet.SecondBet.Equals(SecondBet) && bet.SecondBet.Bookmaker == SecondBet.Bookmaker && bet.SecondBet.Odds == SecondBet.Odds))
+                && bet.Profit == Profit;
         }
-
-        public override string ToString()
-        {
-            return string.Format("{0} {1} {2}", Bet, ForkType, Profit);
-        }
+        
     }
 }

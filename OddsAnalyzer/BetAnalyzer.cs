@@ -27,33 +27,15 @@ namespace OddsAnalyzer
                         double profit = 1 - ((1 / bet.Odds) + (1 / possibleBet.Odds));
                         if (profit < -0.03) continue;
                         string type = string.Format("{0} - {1}", bet, possibleBet);
-
-                        profit = Math.Round(profit * 100, 2);
-
-                        result.Add(new ArbitrageBet(bet, type, profit));
+                        
+                        var arbitrage = new ArbitrageBet(bet, possibleBet);
+                        result.Add(arbitrage);
                     }
                 }
             }
 
             return result;
         }
-        /*
-        public List<ArbitrageBet> GetArbitrageBets()
-        {
-            List<ArbitrageBet> result = new List<ArbitrageBet>();
-            double average = bets.Average(item => item.Odds);
-
-            for(int i = 0; i < bets.Count; i++)
-                for(int j=0; j < bets.Count; j++)
-                {
-                    if (i == j) continue;
-                    double profitVsAverage = 1 / average - 1 / bets[i].Odds;
-                    double profit = 1 / bets[j].Odds - 1 / bets[i].Odds;
-                    result.Add(new ArbitrageBet(bets[i], profitVsAverage, profit));
-                }
-
-            return result;
-        }
-        */
+      
     }
 }

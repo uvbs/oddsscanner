@@ -21,18 +21,22 @@ namespace ArbitrageServiceHost
 
                 arbitrageServiceHost = new ServiceHost(typeof(ArbitrageBetService), httpBaseAddress);
 
-                BasicHttpBinding binding = new BasicHttpBinding();
-                binding.OpenTimeout = new TimeSpan(0, 20, 0);
-                binding.CloseTimeout = new TimeSpan(0, 20, 0);
-                binding.SendTimeout = new TimeSpan(0, 20, 0);
-                binding.ReceiveTimeout = new TimeSpan(0, 20, 0);
-                binding.MaxBufferPoolSize = 2147483647;
-                binding.MaxBufferSize = 2147483647;
-                binding.MaxReceivedMessageSize = 2147483647;
-                var quotas = new System.Xml.XmlDictionaryReaderQuotas();
-                quotas.MaxDepth = 32;
-                quotas.MaxArrayLength = 2147483647;
-                quotas.MaxStringContentLength = 2147483647;
+                BasicHttpBinding binding = new BasicHttpBinding()
+                {
+                    OpenTimeout = new TimeSpan(0, 20, 0),
+                    CloseTimeout = new TimeSpan(0, 20, 0),
+                    SendTimeout = new TimeSpan(0, 20, 0),
+                    ReceiveTimeout = new TimeSpan(0, 20, 0),
+                    MaxBufferPoolSize = 2147483647,
+                    MaxBufferSize = 2147483647,
+                    MaxReceivedMessageSize = 2147483647
+                };
+                var quotas = new System.Xml.XmlDictionaryReaderQuotas()
+                {
+                    MaxDepth = 32,
+                    MaxArrayLength = 2147483647,
+                    MaxStringContentLength = 2147483647
+                };
                 binding.ReaderQuotas = quotas;
 
                 arbitrageServiceHost.Description.Endpoints.Clear();

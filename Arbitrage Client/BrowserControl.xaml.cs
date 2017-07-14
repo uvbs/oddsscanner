@@ -10,39 +10,53 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
 using System.Windows.Shapes;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
-using CefSharp.Wpf;
 using CefSharp;
+using CefSharp.Wpf;
 using System.Security.Cryptography.X509Certificates;
+using BetsLibrary;
+using BookmakerAuth;
+using BookmakerParser;
 
 namespace Arbitrage_Client
 {
     /// <summary>
-    /// Interaction logic for BrowserWindow.xaml
+    /// Interaction logic for BrowserControl.xaml
     /// </summary>
-    public partial class BrowserWindow : Window
+    public partial class BrowserControl : UserControl
     {
-        public BrowserWindow()
+        public BrowserControl()
         {
             InitializeComponent();
+            
+            var requestContextSettings = new RequestContextSettings { CachePath = "cache_context", PersistSessionCookies = true };
+            RequestContext context = new RequestContext(requestContextSettings);
+            browserControl.RequestContext = context;
 
-           
+           // GoTo(Address);
+            
         }
 
         BookmakerSettings bookmakerSettings;
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            GoTo(UrlText.Text, bookmakerSettings);
+            GoTo(UrlText.Text);
+        }
+        
+
+        private void GoTo(string address)
+        {
+            browserControl.Address = address;
+            UrlText.Text = browserControl.Address;
         }
 
-        public void GoTo(string address, BookmakerSettings settings)
+        public void GoTo(string address, Bookmaker bookmaker)
         {
-            bookmakerSettings = settings;
-            if (settings.UseProxy) SetProxy();
-            browserControl.Address = address;
+            bookmakerSettings = BookmakersSettingsCollection.Get(bookmaker);
+            if (bookmakerSettings.UseProxy) SetProxy();
+            GoTo(address);
         }
 
         private void SetProxy()
@@ -52,24 +66,28 @@ namespace Arbitrage_Client
             Cef.UIThreadTaskFactory.StartNew(delegate
             {
                 browserControl.RequestHandler = new MyRequestHandler(bookmakerSettings);
-
-                var rc = this.browserControl.GetBrowser().GetHost().RequestContext;
+                var rc = this.browserControl.RequestContext;
                 var dict = new Dictionary<string, object>();
                 dict.Add("mode", "fixed_servers");
                 dict.Add("server", "" + bookmakerSettings.IP + ":" + bookmakerSettings.Port + "");
-                string error;
-                bool success = rc.SetPreference("proxy", dict, out error);
-
+                bool success = rc.SetPreference("proxy", dict, out string error);
             });
         }
 
-        public ChromiumWebBrowser GetBrowser => browserControl;
-
         public Task<JavascriptResponse> EvaluateScript(string script)
         {
-             return browserControl.GetBrowser().MainFrame.EvaluateScriptAsync(script);
+            Task<JavascriptResponse> result = null;
+            try
+            {
+                result = browserControl.GetBrowser().MainFrame.EvaluateScriptAsync(script);
+            }
+            catch { }
+            return result;
         }
 
+        public ChromiumWebBrowser Browser => browserControl;
+
+        #region proxyauth
         class MyRequestHandler : IRequestHandler
         {
             BookmakerSettings bookmakerSettings;
@@ -153,7 +171,7 @@ namespace Arbitrage_Client
 
                 if (isProxy == true)
                 {
-                    callback.Continue(bookmakerSettings.ProxyLogin, bookmakerSettings.Password);
+                    callback.Continue(bookmakerSettings.ProxyLogin, bookmakerSettings.ProxyPassword);
 
                     return true;
                 }
@@ -162,7 +180,11 @@ namespace Arbitrage_Client
 
             }
         }
+        #endregion
 
-
+        private void UrlText_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Return) GoTo(UrlText.Text);
+        }
     }
 }

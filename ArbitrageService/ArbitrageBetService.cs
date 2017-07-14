@@ -39,14 +39,14 @@ namespace ArbitrageService
             finder = new ArbitrageFinder();
 
             Marathonbet marathonbet = new Marathonbet();
-        //    LeonBets leon = new LeonBets();
+            LeonBets leon = new LeonBets();
             OlimpBookmaker olimp = new OlimpBookmaker();
-            TitanBet titan = new TitanBet();
+        //    TitanBet titan = new TitanBet();
 
             finder.AddBookmaker(marathonbet);
-           // finder.AddBookmaker(leon);
+            finder.AddBookmaker(leon);
             finder.AddBookmaker(olimp);
-            finder.AddBookmaker(titan);
+          //  finder.AddBookmaker(titan);
          //   var newForks = finder.GetForks();
 
             try
@@ -65,7 +65,7 @@ namespace ArbitrageService
                             {
                                 forkList = newForks;
                             }
-                            Thread.Sleep(4000);
+                           // Thread.Sleep(1000);
                         }
                     } catch(Exception ex) { Console.WriteLine(ex); }
                 }, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);
@@ -95,7 +95,7 @@ namespace ArbitrageService
           //  Console.WriteLine(task);
             lock (lockobj)
             {
-                forks = forkList.Where(bet => Bookmakers.Contains(bet.Bookmaker) && Sports.Contains(bet.Sport) && MinProfit <= bet.Profit).ToList();
+                forks = forkList.Where(bet => Bookmakers.Contains(bet.MainBet.Bookmaker) && Bookmakers.Contains(bet.SecondBet.Bookmaker) && Sports.Contains(bet.Sport) && MinProfit <= bet.Profit).ToList();
             }
 
             return JsonConvert.SerializeObject(forks, Newtonsoft.Json.Formatting.Indented, new JsonSerializerSettings

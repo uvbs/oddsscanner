@@ -8,7 +8,7 @@ using HtmlAgilityPack;
 using System.Threading.Tasks;
 using System.Diagnostics;
 namespace BookmakerParser
-{
+{/*
     public class TitanBet : BetsLibrary.BookmakerParser
     {
         private string[] MatchListUrl
@@ -281,7 +281,7 @@ namespace BookmakerParser
                 Console.Write("{0} vs {1}   ", output.MatchName.FirstTeam, output.MatchName.SecondTeam);
                 Console.Write("{0} ", output);
                 Console.Write("coef: {0}", output.Odds);
-            }*/
+            }
 
 
 
@@ -386,6 +386,6 @@ namespace BookmakerParser
             }
         }
 
-    }
+    }*/
 
 }

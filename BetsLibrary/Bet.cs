@@ -22,7 +22,8 @@ namespace BetsLibrary
         }
 
         public abstract List<Bet> GetForkBets();
-        
+
+        public abstract string Name { get; }
 
     }
 
@@ -41,7 +42,7 @@ namespace BetsLibrary
     public class ResultBet : Bet
     {
         public ResultBetType ResultBetType { get; private set; }
-
+        public override string Name => ToString();
 
         public ResultBet(ResultBetType ResultBetType, Time Time, double Odds, MatchName MatchName, string BetUrl, string JavaScriptSelectorCode, Sport Sport, Bookmaker Bookmaker)
         {
@@ -120,7 +121,27 @@ namespace BetsLibrary
 
         public override string ToString()
         {
-            return String.Format("{0} {1}", Time, ResultBetType);
+            string type = string.Empty;
+            switch (ResultBetType)
+            {
+                case ResultBetType.P1:
+                    type = "P1"; break;
+                case ResultBetType.P2:
+                    type = "P2"; break;
+                case ResultBetType.First:
+                    type = "1"; break;
+                case ResultBetType.Draw:
+                    type = "X"; break;
+                case ResultBetType.Second:
+                    type = "2"; break;
+                case ResultBetType.FirstOrDraw:
+                    type = "1X"; break;
+                case ResultBetType.FirstOrSecond:
+                    type = "12"; break;
+                case ResultBetType.SecondOrDraw:
+                    type = "2X"; break;
+            }
+            return String.Format("{0} {1}", Time, type);
         }
 
     }
@@ -135,6 +156,7 @@ namespace BetsLibrary
     {
         public HandicapBetType HandicapBetType { get; private set; }
         public double HandicapValue { get; private set; }
+        public override string Name => ToString();
 
         public HandicapBet(HandicapBetType handicapBetType, double HandicapValue, Time Time, double Odds, MatchName MatchName, string BetUrl, string JavaScriptSelectorCode, Sport Sport, Bookmaker Bookmaker)
         {
@@ -200,6 +222,7 @@ namespace BetsLibrary
         public TotalBetType TotalBetType { get; private set; }
         public double TotalValue { get; private set; }
         public Team Team { get; private set; }
+        public override string Name => ToString();
 
         public TotalBet(TotalBetType TotalBetType, double TotalValue, Time Time, Team Team, double Odds, MatchName MatchName, string BetUrl, string JavaScriptSelectorCode, Sport Sport, Bookmaker Bookmaker)
         {

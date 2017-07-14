@@ -143,7 +143,7 @@ namespace BetsLibrary
 
         public bool Equals(MatchName name)
         {
-            return IsSameTeamName(FirstTeamNormalized, name.FirstTeamNormalized) || IsSameTeamName(SecondTeamNormalized, name.SecondTeamNormalized);
+            return IsSameTeamName(FirstTeamNormalized, name.FirstTeamNormalized) && IsSameTeamName(SecondTeamNormalized, name.SecondTeamNormalized);
         }
         
     }

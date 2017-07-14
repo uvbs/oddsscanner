@@ -58,8 +58,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BookmakersAuth.cs" />
     <Compile Include="MarathonAuth.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\BetsLibrary\BetsLibrary.csproj">
+      <Project>{6ae0228a-2f69-48ef-bbc0-e28682bbf19e}</Project>
+      <Name>BetsLibrary</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

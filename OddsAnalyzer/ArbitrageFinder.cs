@@ -9,28 +9,52 @@ namespace OddsAnalyzer
 {
     public class ArbitrageFinder
     {
-        private DateTime LastRefresh; 
         private Dictionary<Bet, BetAnalyzer> analyzerDict = new Dictionary<Bet, BetAnalyzer>();
         private List<BookmakerParser> bookmakerList = new List<BookmakerParser>();
+        public List<ArbitrageBet> ArbitrageBets = new List<ArbitrageBet>();
 
         public void AddBookmaker(BookmakerParser bookmaker)
         {
             bookmakerList.Add(bookmaker);
         }
-
+        /*
         public void Refresh()
         {
             analyzerDict = new Dictionary<Bet, BetAnalyzer>();
             var tasks = new List<Task>();
+
+            List<MatchName> matches = new List<MatchName>();
+
             foreach (var bookmaker in bookmakerList)
             {
-                tasks.Add(Task.Factory.StartNew(() => bookmaker.Parse()));
+                bookmaker.Parse();
+                matches.AddRange(bookmaker.MatchDict.Keys);
+            }
+
+            var filteredMatches = matches.Where(name =>
+            {
+                int count = matches.Where(match => match.Equals(name)).Count();
+                return count > 1;
+            }).ToList();
+
+            Console.WriteLine("filtered match: " + filteredMatches.Count);
+
+            foreach (var bookmaker in bookmakerList)
+            {
+               tasks.Add(Task.Factory.StartNew(() => bookmaker.ParseBets(filteredMatches)));
             }
             Task.WaitAll(tasks.ToArray());
+            
+
+    }*/
+
+        public List<ArbitrageBet> GetForks()
+        {
+            List<ArbitrageBet> result = new List<ArbitrageBet>();
+            analyzerDict = new Dictionary<Bet, BetAnalyzer>();
             foreach (var bookmaker in bookmakerList)
             {
-                var betList = bookmaker.GetBetList();
-                foreach(var bet in betList)
+                foreach (var bet in bookmaker.BetList.ToList())
                 {
                     if (!analyzerDict.TryGetValue(bet, out BetAnalyzer betAnalyzer))
                     {
@@ -41,27 +65,8 @@ namespace OddsAnalyzer
                 }
             }
 
-            LastRefresh = DateTime.Now;
-        }
-        /*
-        public List<ArbitrageBet> GetArbitrageBets()
-        {
-            Refresh();
-            List<ArbitrageBet> result = new List<ArbitrageBet>();
-            foreach (var analyzer in analyzerDict)
-            {
-                var betsList = analyzer.Value.GetArbitrageBets();
-                foreach (var bet in betsList)
-                    result.Add(bet);
-            }
 
-            return result;
-        }*/
 
-        public List<ArbitrageBet> GetForks()
-        {
-            Refresh();
-            List<ArbitrageBet> result = new List<ArbitrageBet>();
             foreach (var analyzer in analyzerDict)
                 result.AddRange(analyzer.Value.GetForks(this));
 

@@ -3,16 +3,20 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using HtmlAgilityPack;
 
 namespace BetsLibrary
 {
     public abstract class BookmakerParser
     {
-        protected List<Bet> BetList = new List<Bet>();
+        public List<Bet> BetList = new List<Bet>();
+        public Dictionary<MatchName, string> MatchDict = new Dictionary<MatchName, string>();
+        
 
-        public IReadOnlyList<Bet> GetBetList() => BetList.AsReadOnly();
-
-        public abstract void Parse(); 
+        public abstract void Parse();
+        public abstract void ParseBets(List<MatchName> matches);
+        public abstract void ParseMatchPageHtml(string html, string url);
+        public abstract void ParseMatchPageHtml(HtmlDocument doc, string url);
 
         public List<MatchName> GetMatchList()
         {

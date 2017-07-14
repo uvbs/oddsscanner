@@ -15,7 +15,6 @@ namespace BookmakerParser
 
         private const int MaximumMatches = 100;
         
-        List<string> activeMatchList = new List<string>();
         private const Bookmaker Maker = Bookmaker.Olimp;
         string JavaSelectCode = "Java";
         string[] type_of_sport = { "1", "5", "3", "10" }; // 1- football, 5 - basketball, 3 - tennis, 10 volleyball
@@ -23,39 +22,72 @@ namespace BookmakerParser
         public override void Parse()
         {
             int index = 0;
-            activeMatchList = new List<string>();
-            while (activeMatchList.Count < MaximumMatches && index < type_of_sport.Length)
+            MatchDict = new Dictionary<MatchName, string>();
+            while (MatchDict.Count < MaximumMatches && index < type_of_sport.Length)
             {
                 ParseMatchList(index);
                 index++;
             }
+          
+        }
+
+        public override void ParseBets(List<MatchName> matches)
+        {
             BetList = new List<Bet>();
 
             var tasks = new List<Task>();
             int taskCount = 0;
 
-            foreach (var match in activeMatchList)
+            foreach (var match in matches)
             {
-                tasks.Add(Task.Factory.StartNew(() => ParseMatch(match)));
+                if (!MatchDict.ContainsKey(match)) continue;
+                tasks.Add(Task.Factory.StartNew(() => ParseMatch(MatchDict[match])));
                 taskCount++;
-                if (taskCount > 10) { Task.WaitAll(tasks.ToArray()); taskCount = 0; }
+                if (taskCount > 20) { Task.WaitAll(tasks.ToArray()); taskCount = 0; }
             }
 
             Task.WaitAll(tasks.ToArray());
 
             Console.WriteLine("Olimp parsed {0} bets at {1}", BetList.Count, DateTime.Now);
         }
+
+        private HtmlDocument LoadWithTimeout(string url)
+        {
+            var task = new Task<HtmlDocument>(() =>
+            {
+                HtmlWeb web = new HtmlWeb();
+                web.PreRequest += (request) =>
+                {
+                    request.Headers.Add("Accept-Language", "en-US");
+                    return true;
+                };
+                HtmlDocument doc;
+                try
+                {
+                    doc = web.Load(url);
+                }
+                catch {
+                    return null; }
+
+                return doc;
+            });
+
+            task.Start();
+
+            task.Wait(2000);
+            if (!task.IsCompleted) return null;
+            return task.Result;
+        }
         
 
         public void ParseMatchList(int index)
         {
-            HtmlWeb web = new HtmlWeb();
-            HtmlDocument doc = web.Load(MatchListUrl);
 
-            //    Console.WriteLine(html);
+
+            HtmlDocument doc = LoadWithTimeout(MatchListUrl);
+            if (doc == null) return;
 
             HtmlNodeCollection matchList = doc.DocumentNode.SelectNodes(string.Format("//tr[@data-sport='{0}']", type_of_sport[index]));
-
 
             if (matchList == null) return;
             foreach (var node in matchList)
@@ -64,172 +96,31 @@ namespace BookmakerParser
                 var node2 = matchNodes.First();
                 if (matchNodes == null) return;
                 var idNode = node2.Attributes["id"];
-
+                
                 var hrefNode = node2.Attributes["href"];
                 if (idNode == null || hrefNode == null) continue;
 
                 string id = idNode.Value;
                 if (!id.Contains("match_live_name")) continue;
 
-                string url = "https://www.olimp.kz/" + hrefNode.Value;
+                string url = "https://www.olimpkz.com/" + hrefNode.Value;
                 url = url.Replace("amp;", "");
-           //     Console.WriteLine(url);
-
-                activeMatchList.Add(url);
+                //     Console.WriteLine(url);
+                string[] name = node2.InnerText.Split(new string[] { " - " }, StringSplitOptions.RemoveEmptyEntries);
+                MatchName matchname = new MatchName(name[0], name[1]);
+                MatchDict.Add(matchname, url);
                 
-                if (activeMatchList.Count == MaximumMatches) break;
+                if (MatchDict.Count == MaximumMatches) break;
             }
 
         }
-        
+
         private void ParseMatch(string url)
         {
-
-            HtmlWeb web = new HtmlWeb();
-            web.PreRequest+= (request) =>
-            {
-                request.Headers.Add("Accept-Language", "en-US");
-                return true;
-            };
-            var proxy = ProxyList.GetRandomProxy();
-            HtmlDocument doc;
-
-            try
-            {
-                doc = web.Load(url, proxy.ip, proxy.port, proxy.login, proxy.password);
-            }
-            catch { return; }
-
-            MatchName matchName = GetMatchName(doc);
-            if (matchName == null) return;
-            Sport sport = GetSport(doc);
-            if (sport == Sport.NotSupported) return;
-
-
-            string BetUrl = url;
-
-
-            Bet result = null;
-
-            HtmlNodeCollection maindocument = doc.DocumentNode.SelectNodes("//span[@class='bet_sel koefs']");
-
-            if (maindocument == null) return;
-
-            foreach (var node in maindocument)
-            {
-                result = null;
-                try
-                {
-                    string[] betParams = node.Attributes["data-select"].Value.Split(new string[] { ":" }, StringSplitOptions.RemoveEmptyEntries);
-                    string coeff = node.Attributes[string.Format("data-v{0}", betParams[1])].Value;
-                    double odds = Convert.ToDouble(coeff.Replace(".", ","));
-                    Time time = GetTime(betParams);
-                    if (time == null) continue;
-                    
-                    if(betParams[1] == "1") // 1, X, 2, 1X, 12, x2
-                    {
-                        if(betParams[2] == "1" || betParams[2] == "10" || betParams[2] == "13" || betParams[2] == "16") // 1, X, 2
-                        {
-                            if (betParams[4] == "1") result = new ResultBet(ResultBetType.First, time, odds, matchName, BetUrl, JavaSelectCode, sport, Maker);
-                            if( betParams[4] == "2") result = new ResultBet(ResultBetType.Draw, time, odds, matchName, BetUrl, JavaSelectCode, sport, Maker);
-                            if (betParams[4] == "3") result = new ResultBet(ResultBetType.Second, time, odds, matchName, BetUrl, JavaSelectCode, sport, Maker);
-                        }
-
-                        if (betParams[2] == "2" || betParams[2] == "9" || betParams[2] == "22") // 1, 2 all game
-                        {
-                            if (betParams[4] == "1") result = new ResultBet(ResultBetType.P1, time, odds, matchName, BetUrl, JavaSelectCode, sport, Maker);
-                            if (betParams[4] == "2") result = new ResultBet(ResultBetType.P2, time, odds, matchName, BetUrl, JavaSelectCode, sport, Maker);
-                        }
-
-                        if(betParams[2] == "3") // 1x, 12, x2 all game
-                        {
-                            if (betParams[4] == "1") result = new ResultBet(ResultBetType.FirstOrDraw, time, odds, matchName, BetUrl, JavaSelectCode, sport, Maker);
-                            if (betParams[4] == "2") result = new ResultBet(ResultBetType.FirstOrSecond, time, odds, matchName, BetUrl, JavaSelectCode, sport, Maker);
-                            if (betParams[4] == "3") result = new ResultBet(ResultBetType.SecondOrDraw, time, odds, matchName, BetUrl, JavaSelectCode, sport, Maker);
-                        }
-                    }
-
-                    if(betParams[1] == "2") // handicap, under
-                    {
-                        double param = Convert.ToDouble(betParams[3].Replace(".", ","));
-
-                        if(betParams[2] == "4" || betParams[2] == "168" || betParams[2] == "11" || betParams[2] == "14" || betParams[2] == "17") // f1/f2 
-                        {
-                            HandicapBetType type = betParams[4] == "1" ? HandicapBetType.F1 : HandicapBetType.F2;
-                            result = new HandicapBet(type, param, time, odds, matchName, BetUrl, JavaSelectCode, sport, Maker);
-                        }
-
-                        if(betParams[2] == "5" || betParams[2] == "12" || betParams[2] == "15" || betParams[2] == "18") // under
-                        {
-                            result = new TotalBet(TotalBetType.Under, param, time, Team.All, odds, matchName, BetUrl, JavaSelectCode, sport, Maker);
-                        }
-
-                        if(betParams[2] == "7") //first team
-                        {
-                            result = new TotalBet(TotalBetType.Under, param, time, Team.First, odds, matchName, BetUrl, JavaSelectCode, sport, Maker);
-                        }
-
-                        if (betParams[2] == "8") //second team
-                        {
-                            result = new TotalBet(TotalBetType.Under, param, time, Team.Second, odds, matchName, BetUrl, JavaSelectCode, sport, Maker);
-                        }
-
-                    }
-
-                    if (betParams[1] == "3") // over
-                    {
-                        double param = Convert.ToDouble(betParams[3].Replace(".", ","));
-
-                        if (betParams[2] == "5" || betParams[2] == "12" || betParams[2] == "15" || betParams[2] == "18") // over
-                        {
-                            result = new TotalBet(TotalBetType.Over, param, time, Team.All, odds, matchName, BetUrl, JavaSelectCode, sport, Maker);
-                        }
-
-                        if (betParams[2] == "7") //first team
-                        {
-                            result = new TotalBet(TotalBetType.Over, param, time, Team.First, odds, matchName, BetUrl, JavaSelectCode, sport, Maker);
-                        }
-
-                        if (betParams[2] == "8") //second team
-                        {
-                            result = new TotalBet(TotalBetType.Over, param, time, Team.Second, odds, matchName, BetUrl, JavaSelectCode, sport, Maker);
-                        }
-
-                    }
-
-                    if (result != null)
-                    {
-                        int index = BetList.IndexOf(result);
-                        if (index != -1)
-                        {
-                            BetList[index].ChangeOdds(result.Odds);
-                        }
-                        else
-                            BetList.Add(result);
-                    }
-                }
-                catch (Exception e)
-                {
-                    Console.Write(e.Message);
-                }
-
-
-            }
-            #region code
-            /*
-            foreach (var output in BetList)
-            {
-                Console.WriteLine();
-                Console.Write("{0} vs {1}   ", output.MatchName.FirstTeam, output.MatchName.SecondTeam);
-                Console.Write("{0} ", output);
-                Console.Write("coef: {0}", output.Odds);
-            }*/
-
-            #endregion
-            System.Threading.Thread.Sleep(50);
+            HtmlDocument doc = LoadWithTimeout(url);
+            if (doc == null) return;
+            ParseMatchPageHtml(doc, url);
         }
-
-
 
         MatchName GetMatchName(HtmlDocument doc)
         {
@@ -299,8 +190,137 @@ namespace BookmakerParser
 
             return new Time(type, value);
         }
-        
-       
+
+        public override void ParseMatchPageHtml(string html, string url)
+        {
+            HtmlDocument doc = new HtmlDocument();
+            doc.LoadHtml(html);
+            ParseMatchPageHtml(doc, url);
+        }
+
+        public override void ParseMatchPageHtml(HtmlDocument doc, string url)
+        {
+            MatchName matchName = GetMatchName(doc);
+            if (matchName == null) return;
+            Sport sport = GetSport(doc);
+            if (sport == Sport.NotSupported) return;
+
+
+            string BetUrl = url;
+            Bet result = null;
+
+            HtmlNodeCollection maindocument = doc.DocumentNode.SelectNodes("//span[@class='bet_sel koefs']");
+
+            if (maindocument == null) return;
+            foreach (var node in maindocument)
+            {
+                result = null;
+                try
+                {
+                    string[] betParams = node.Attributes["data-select"].Value.Split(new string[] { ":" }, StringSplitOptions.RemoveEmptyEntries);
+                    HtmlNodeCollection coeffNodes = node.SelectNodes(".//b");
+                    if (coeffNodes == null) continue;
+
+                    string coeff = coeffNodes.First().InnerText;
+                    double odds = Convert.ToDouble(coeff.Replace(".", ","));
+                    Time time = GetTime(betParams);
+                    if (time == null) continue;
+
+                    JavaSelectCode =
+                        "(function() { var elements = Array.from(document.getElementsByClassName('bet_sel koefs')); elements.forEach(function(item, i, arr) {" +
+                        "if(item.getAttribute('data-select') == '" + node.Attributes["data-select"].Value + "') item.click(); }); })();";
+
+                    if (betParams[1] == "1") // 1, X, 2, 1X, 12, x2
+                    {
+                        if (betParams[2] == "1" || betParams[2] == "10" || betParams[2] == "13" || betParams[2] == "16") // 1, X, 2
+                        {
+                            if (betParams[4] == "1") result = new ResultBet(ResultBetType.First, time, odds, matchName, BetUrl, JavaSelectCode, sport, Maker);
+                            if (betParams[4] == "2") result = new ResultBet(ResultBetType.Draw, time, odds, matchName, BetUrl, JavaSelectCode, sport, Maker);
+                            if (betParams[4] == "3") result = new ResultBet(ResultBetType.Second, time, odds, matchName, BetUrl, JavaSelectCode, sport, Maker);
+                        }
+
+                        if (betParams[2] == "2" || betParams[2] == "9" || betParams[2] == "22") // 1, 2 all game
+                        {
+                            if (betParams[4] == "1") result = new ResultBet(ResultBetType.P1, time, odds, matchName, BetUrl, JavaSelectCode, sport, Maker);
+                            if (betParams[4] == "2") result = new ResultBet(ResultBetType.P2, time, odds, matchName, BetUrl, JavaSelectCode, sport, Maker);
+                        }
+
+                        if (betParams[2] == "3") // 1x, 12, x2 all game
+                        {
+                            if (betParams[4] == "1") result = new ResultBet(ResultBetType.FirstOrDraw, time, odds, matchName, BetUrl, JavaSelectCode, sport, Maker);
+                            if (betParams[4] == "2") result = new ResultBet(ResultBetType.FirstOrSecond, time, odds, matchName, BetUrl, JavaSelectCode, sport, Maker);
+                            if (betParams[4] == "3") result = new ResultBet(ResultBetType.SecondOrDraw, time, odds, matchName, BetUrl, JavaSelectCode, sport, Maker);
+                        }
+                    }
+
+                    if (betParams[1] == "2") // handicap, under
+                    {
+                        double param = Convert.ToDouble(betParams[3].Replace(".", ","));
+
+                        if (betParams[2] == "4" || betParams[2] == "168" || betParams[2] == "11" || betParams[2] == "14" || betParams[2] == "17") // f1/f2 
+                        {
+                            HandicapBetType type = betParams[4] == "1" ? HandicapBetType.F1 : HandicapBetType.F2;
+                            result = new HandicapBet(type, param, time, odds, matchName, BetUrl, JavaSelectCode, sport, Maker);
+                        }
+
+                        if (betParams[2] == "5" || betParams[2] == "12" || betParams[2] == "15" || betParams[2] == "18") // under
+                        {
+                            result = new TotalBet(TotalBetType.Under, param, time, Team.All, odds, matchName, BetUrl, JavaSelectCode, sport, Maker);
+                        }
+
+                        if (betParams[2] == "7") //first team
+                        {
+                            result = new TotalBet(TotalBetType.Under, param, time, Team.First, odds, matchName, BetUrl, JavaSelectCode, sport, Maker);
+                        }
+
+                        if (betParams[2] == "8") //second team
+                        {
+                            result = new TotalBet(TotalBetType.Under, param, time, Team.Second, odds, matchName, BetUrl, JavaSelectCode, sport, Maker);
+                        }
+
+                    }
+
+                    if (betParams[1] == "3") // over
+                    {
+                        double param = Convert.ToDouble(betParams[3].Replace(".", ","));
+
+                        if (betParams[2] == "5" || betParams[2] == "12" || betParams[2] == "15" || betParams[2] == "18") // over
+                        {
+                            result = new TotalBet(TotalBetType.Over, param, time, Team.All, odds, matchName, BetUrl, JavaSelectCode, sport, Maker);
+                        }
+
+                        if (betParams[2] == "7") //first team
+                        {
+                            result = new TotalBet(TotalBetType.Over, param, time, Team.First, odds, matchName, BetUrl, JavaSelectCode, sport, Maker);
+                        }
+
+                        if (betParams[2] == "8") //second team
+                        {
+                            result = new TotalBet(TotalBetType.Over, param, time, Team.Second, odds, matchName, BetUrl, JavaSelectCode, sport, Maker);
+                        }
+
+                    }
+
+                    if (result != null)
+                    {
+                        int index = BetList.IndexOf(result);
+                        if (index != -1)
+                        {
+                            BetList[index].ChangeOdds(result.Odds);
+                        }
+                        else
+                            BetList.Add(result);
+                    }
+                }
+                catch (Exception e)
+                {
+                    Console.Write(e.Message);
+                }
+
+
+            }
+            System.Threading.Thread.Sleep(50);
+        }
     }
 
 

@@ -112,12 +112,12 @@ namespace oddsscanner
 
             Marathonbet marathon = new Marathonbet();
             OlimpBookmaker olimp = new OlimpBookmaker();
-            TitanBet titan = new TitanBet();
+            LeonBets leon = new LeonBets();
 
 
-            for (int i = 0; i < 100; i++) {
-                marathon.Parse();
-                Console.WriteLine(marathon.GetBetList().Count);
+            for (int i = 0; i < 10000; i++) {
+                leon.Parse();
+             //   Console.WriteLine(leon().Count);
                 Thread.Sleep(2000);
             }
 

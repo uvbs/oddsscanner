@@ -11,7 +11,7 @@ namespace Arbitrage_Client
 {
     public static class PlacedBets
     {
-        private static Dictionary<ArbitrageBet, DateTime> betsDict = new Dictionary<ArbitrageBet, DateTime>();
+        private static Dictionary<string, DateTime> betsDict = new Dictionary<string, DateTime>();
         private const string filePath = "placedbets.dat";
         private static TimeSpan timeToDelete = TimeSpan.FromHours(5);
 
@@ -19,41 +19,52 @@ namespace Arbitrage_Client
         {
             if (!File.Exists(filePath)) return;
 
-            JsonSerializer serializer = new JsonSerializer();
+            int counter = 0;
+            string line;
 
-            using (StreamReader sw = new StreamReader(filePath))
-            using (JsonReader reader = new JsonTextReader(sw))
+            // Read the file and display it line by line.
+            StreamReader file = new StreamReader(filePath);
+            while ((line = file.ReadLine()) != null)
             {
-                betsDict = serializer.Deserialize<Dictionary<ArbitrageBet, DateTime>>(reader);
+                string[] split = line.Split(new string[] { " @ " }, StringSplitOptions.RemoveEmptyEntries);
+                betsDict.Add(split[0], Convert.ToDateTime(split[1]));
+                counter++;
             }
+
+            file.Close();
         }
 
         public static bool Contains(ArbitrageBet bet)
         {
-            var bets = betsDict.Where(placedBet => placedBet.Key.Bet.Equals(bet.Bet) && placedBet.Key.Bookmaker == bet.Bookmaker);
-            return bets.Count() != 0;
+            return betsDict.ContainsKey(BetToString(bet));
         }
 
         public static void AddBet(ArbitrageBet bet)
         {
-            betsDict.Add(bet, DateTime.Now);
+            if (betsDict.ContainsKey(BetToString(bet))) return;
+            betsDict.Add(BetToString(bet), DateTime.Now);
             DeleteOldBets();
             Save();
         }
 
         public static void Save()
         {
-            JsonSerializer serializer = new JsonSerializer();
-            using (StreamWriter sw = new StreamWriter(filePath))
-            using (JsonWriter writer = new JsonTextWriter(sw))
-            {
-                serializer.Serialize(writer, betsDict);
-            }
+            StreamWriter file = new StreamWriter(filePath);
+
+            foreach(var pair in betsDict)
+                file.WriteLine(pair.Key + " @ " + pair.Value);
+
+            file.Close();
         }
 
         private static void DeleteOldBets()
         {
             betsDict = betsDict.Where(pair => pair.Value - DateTime.Now < timeToDelete).ToDictionary(p => p.Key, p => p.Value);
+        }
+
+        private static string BetToString(ArbitrageBet bet)
+        {
+            return string.Format("{0} {1} {2}", bet.MainBet.Bookmaker, bet.MainBet, bet.MatchName);
         }
     }
 }

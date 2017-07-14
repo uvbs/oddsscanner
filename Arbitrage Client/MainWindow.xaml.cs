@@ -17,6 +17,9 @@ using BetsLibrary;
 using CefSharp.Wpf;
 using Newtonsoft.Json;
 using System.ServiceModel;
+using BookmakerAuth;
+using System.Threading;
+using CefSharp;
 
 namespace Arbitrage_Client
 {
@@ -25,85 +28,40 @@ namespace Arbitrage_Client
     /// </summary>
     public partial class MainWindow : Window
     {
-        BrowserWindow browserWindow;
         public MainWindow()
         {
             InitializeComponent();
-            browserWindow = new BrowserWindow();
 
-        }
-        private void Button_Click(object sender, RoutedEventArgs e)
-        {
-            /*
-            browser = new BrowserWindow();
-            browser.Show();
-            browser.GoTo("https://2ip.ru");
-            browser.GetBrowser.LoadingStateChanged += GetBrowser_LoadingStateChanged;*/
-            //  browser.Address = "jgkgjg";
-            
-        }
-        /*
-        private void GetBrowser_LoadingStateChanged(object sender, CefSharp.LoadingStateChangedEventArgs e)
-        {
-            if (!e.IsLoading)
+
+            if (!Cef.IsInitialized)
             {
-                browser.GetBrowser.LoadingStateChanged -= GetBrowser_LoadingStateChanged;
-
-                browser.EvaluateScript(BookmakerAuth.MarathonAuth.GetAuthorizedCheckScript()).ContinueWith(task =>
+                CefSettings settings = new CefSettings()
                 {
-                   if(task.Result.Result == null) return;
-                    if((int)task.Result.Result != 0) browser.EvaluateScript(BookmakerAuth.MarathonAuth.GetMarathonAuthScript("illya2342", "12"));
-                });
-                
+                    CachePath = "cache_context",
+                    PersistSessionCookies = true
+                };
+                Cef.Initialize(settings);
             }
+
         }
 
-        private void Button_Click_1(object sender, RoutedEventArgs e)
-        {
-            browser = new BrowserWindow();
-            browser.Show();
-            browser.GoTo("https://m.titanbet.com/en/inplay/FOOT/Football");
-        }*/
-
-        bool AutoBetting = false;
+        bool AutoBettingStarted = false;
 
         private void Window_Initialized(object sender, EventArgs e)
         {
-            /*   List<ArbitrageBet> list = new List<ArbitrageBet>();
-               list.Add(new ArbitrageBet(null, 1, 1));
-               BetsList.ItemsSource = list;*/
+        /*    AutoBetting betting = new AutoBetting(this);
 
-            BasicHttpBinding binding = new BasicHttpBinding();
-            binding.OpenTimeout = new TimeSpan(0, 20, 0);
-            binding.CloseTimeout = new TimeSpan(0, 20, 0);
-            binding.SendTimeout = new TimeSpan(0, 20, 0);
-            binding.ReceiveTimeout = new TimeSpan(0, 20, 0);
-            binding.MaxBufferPoolSize = 2147483647;
-            binding.MaxBufferSize = 2147483647;
-            binding.MaxReceivedMessageSize = 2147483647;
-            ForkService.ArbitrageServiceClient client = new ForkService.ArbitrageServiceClient(binding, new EndpointAddress("http://localhost:49359/ArbitrageService"));
-            
-            var task = new Task(() =>
+            var task = new Thread(() =>
             {
                 while (true)
                 {
-                        string result = client.GetArbitrageList(FilterSettings.GetJsonString());
-                    
-                        List<ArbitrageBet> newList = JsonConvert.DeserializeObject<List<ArbitrageBet>>(result, new JsonSerializerSettings
-                        {
-                            TypeNameHandling = TypeNameHandling.All
-                        });
-                    Sync(newList);
-                    
-
-                    
-
-                    Task.Delay(2000).Wait();
+                    betting.GetForks();
+                    System.Threading.Thread.Sleep(1000);
                 }
             });
-
-            task.Start();
-
+            task.SetApartmentState(ApartmentState.STA);
+            task.IsBackground = true;
+            task.Start();*/
         }
 
         private void Button_Click_1(object sender, RoutedEventArgs e)
@@ -125,38 +83,34 @@ namespace Arbitrage_Client
         }
     
         bool isBrowserOpen = false;
-        
-        private void PlaceBet_Click(object sender, RoutedEventArgs e)
-        {
-         //   SystemSounds.Beep.Play();
+
+        private void OpenPlaceBet()
+        {/*
             if (isBrowserOpen) return;
             object selectedItem = BetsList.SelectedItem;
             if (selectedItem == null) return;
             ArbitrageBet arbitrageBet = selectedItem as ArbitrageBet;
+
             browserWindow = new BrowserWindow();
-            browserWindow.GoTo(arbitrageBet.Bet.BetUrl, BookmakersSettingsCollection.Get(arbitrageBet.Bookmaker));
-            browserWindow.Title = string.Format("{0} {1} {2} Profit: {3:0.00}% Coeff: {4}", arbitrageBet.Bookmaker, arbitrageBet.MatchName, arbitrageBet.Bet, arbitrageBet.Profit, arbitrageBet.Coeff);
+          //  browserWindow.PlaceBet(arbitrageBet);
             browserWindow.Closed += (i, j) => { isBrowserOpen = false; PlaceBet.IsEnabled = true; };
             browserWindow.Show();
-            browserWindow.GetBrowser.LoadingStateChanged+= (browserO, args)=>
-            {
-                if (!args.IsLoading)
-                {
-                    new Task(() =>
-                    {
-                        Task.Delay(2000);
-                      //  arbitrageBe
-                    }).Start();
-                }
-            };
+
             isBrowserOpen = true;
             PlaceBet.IsEnabled = false;
+
+           */
+        }
+
+        private void PlaceBet_Click(object sender, RoutedEventArgs e)
+        {
+            OpenPlaceBet();
         }
 
         private void AutoBettingButton_Click(object sender, RoutedEventArgs e)
         {
-            AutoBetting = !AutoBetting;
-            AutoBettingButton.Content = AutoBetting ? "Остановить АвтоПроставку" : "Запустить АвтоПроставку";
+            AutoBettingStarted = !AutoBettingStarted;
+            AutoBettingButton.Content = AutoBettingStarted ? "Остановить АвтоПроставку" : "Запустить АвтоПроставку";
         }
 
 
@@ -170,12 +124,12 @@ namespace Arbitrage_Client
 
         private void DeleteBetButtom_Click(object sender, RoutedEventArgs e)
         {
-            object selectedItem = BetsList.SelectedItem;
+          /*  object selectedItem = BetsList.SelectedItem;
             if (selectedItem == null) return;
             ArbitrageBet arbitrageBet = selectedItem as ArbitrageBet;
 
             PlacedBets.AddBet(arbitrageBet);
-            BetsList.Items.Remove(selectedItem);
+            BetsList.Items.Remove(selectedItem);*/
         }
 
         bool isFilterWindowOpen = false;
@@ -191,7 +145,7 @@ namespace Arbitrage_Client
 
         private void Sync(List<ArbitrageBet> newList)
         {
-            newList = newList.Where(bet => !PlacedBets.Contains(bet)).ToList();
+           /* newList = newList.Where(bet => !PlacedBets.Contains(bet)).ToList();
             
             BetsList.Dispatcher.Invoke(() =>
             {
@@ -199,8 +153,24 @@ namespace Arbitrage_Client
                     if (!newList.Contains(BetsList.Items[i])) { BetsList.Items.RemoveAt(i); i--; }
 
                 foreach (var bet in newList)
-                    if (!BetsList.Items.Contains(bet)) BetsList.Items.Add(bet);
-            });
+                    if (!BetsList.Items.Contains(bet)) { BetsList.Items.Add(bet); SystemSounds.Beep.Play(); }
+                });*/
+        }
+
+        private void BetsList_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            OpenPlaceBet();
+        }
+
+        private void TabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            MatchParserModel item = tabControl.SelectedItem as MatchParserModel;
+            if(item!=null) item.Color = "Black";
+        }
+
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+                Cef.Shutdown();
         }
     }
 }

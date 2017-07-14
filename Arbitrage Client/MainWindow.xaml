@@ -7,20 +7,32 @@
         mc:Ignorable="d"
         Height="403.912" Width="803.117"
         Title="Arbitrage"
-         WindowState="Maximized" Initialized="Window_Initialized" >
+         WindowState="Maximized" Initialized="Window_Initialized" Closing="Window_Closing" >
+
+
+    <Window.DataContext>
+        <local:ViewModel/>
+    </Window.DataContext>
     <Grid>
-        <ListView Margin="10,35,10,30" Name="BetsList" ItemsSource="{Binding ArbitrageBets}">
-            <ListView.View>
-                <GridView>
-                    <GridViewColumn Header="Букмекер" Width="200" DisplayMemberBinding="{Binding Bookmaker}"/>
-                    <GridViewColumn Header="Спорт" Width="200" DisplayMemberBinding="{Binding Sport}" />
-                    <GridViewColumn Header="Матч" Width="200" DisplayMemberBinding="{Binding MatchName}" />
-                    <GridViewColumn Header="Ставка" Width="200" DisplayMemberBinding="{Binding Bet}" />
-                    <GridViewColumn Header="Коефф" Width="200" DisplayMemberBinding="{Binding Coeff}" />
-                    <GridViewColumn Header="Прибыль" Width="200" DisplayMemberBinding="{Binding Profit}" />
-                </GridView>
-            </ListView.View>
-        </ListView>
+
+        <TabControl Margin="0,40,0,0" Name="tabControl"
+        ItemsSource="{Binding Tabs}" SelectionChanged="TabControl_SelectionChanged">
+            <TabControl.ItemTemplate>
+                <!-- this is the header template-->
+                <DataTemplate>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{Binding Header}" Foreground="{Binding Color}" />
+                    </StackPanel>
+                </DataTemplate>
+            </TabControl.ItemTemplate>
+            <TabControl.ContentTemplate>
+                <!-- this is the body of the TabItem template-->
+                <DataTemplate>
+                    <ContentControl Content="{Binding Control}"/>
+                </DataTemplate>
+            </TabControl.ContentTemplate>
+        </TabControl>
+
         <Button Content="Букмекеры" HorizontalAlignment="Left" Margin="10,5,0,0" VerticalAlignment="Top" Width="75" Height="25" Name="BookmakerButton" Click="BookmakerButton_Click"/>
         <Button Content="Фильтр" HorizontalAlignment="Left" Margin="90,5,0,0" VerticalAlignment="Top" Width="75" Height="25" Name="FilterButton" Click="FilterButton_Click"/>
         <Button Content="Поставить" HorizontalAlignment="Left" Margin="170,5,0,0" VerticalAlignment="Top" Width="75" Height="25" Name="PlaceBet" Click="PlaceBet_Click"/>
