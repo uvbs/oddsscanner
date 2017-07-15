@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using BetsLibrary;
@@ -28,7 +28,7 @@ namespace BookmakerParser
         // iceHockey не можу знайти силку в лайві його не має і не буде до 2018 ... 
         //
         private const int MaximumMatches = 100;
-        
+
         private const Bookmaker Maker = Bookmaker.Marathonbet;
         string JavaSelectCode = "Java";
         public Marathonbet()
@@ -41,14 +41,16 @@ namespace BookmakerParser
             var task = new Task<HtmlDocument>(() =>
             {
                 HtmlWeb web = new HtmlWeb();
-             
+
                 HtmlDocument doc;
                 try
                 {
                     doc = web.Load(url);
                 }
-                catch {
-                    return null; }
+                catch
+                {
+                    return null;
+                }
 
                 return doc;
             });
@@ -91,7 +93,7 @@ namespace BookmakerParser
                 MatchDict.Add(Name, url);
                 if (MatchDict.Count == MaximumMatches) break;
             }
-            
+
         }
 
         private void ParseMatch(string url)
@@ -100,7 +102,7 @@ namespace BookmakerParser
             if (doc == null) return;
             ParseMatchPageHtml(doc, url);
         }
-           
+
         MatchName GetMatchName(HtmlNode node)
         {
             try
@@ -139,7 +141,7 @@ namespace BookmakerParser
             }
 
             Task.WaitAll(tasks.ToArray());
-            
+
 
             Console.WriteLine("Marathon parsed {0} bets at {1}", BetList.Count, DateTime.Now);
         }
@@ -187,7 +189,7 @@ namespace BookmakerParser
                 Team team = GetTeam(TotalorHand, matchName);
                 Time time = GetTime(TotalorHand);
                 #region main bets
-                if (TotalorHand.Contains("Match Result") || TotalorHand == "Result" || TotalorHand.Contains("Match Winner Including All OT") || (TotalorHand.Contains("Result") && TotalorHand.Contains("Set")) || TotalorHand.Contains("Normal Time Result") || TotalorHand.Contains("To Win Match"))
+                if (TotalorHand.Contains("Match Result") || TotalorHand == "Result" || TotalorHand.Contains("Match Winner Including All OT") || (TotalorHand.Contains("Result") && TotalorHand.Contains("Set")) || TotalorHand.Contains("Normal Time Result") || TotalorHand.Contains("To Win Match") && !TotalorHand.Contains("Handicap"))
                 {
                     if (TotalorHand.Contains("Match Winner Including All OT"))
                     {
