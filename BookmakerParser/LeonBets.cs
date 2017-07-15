@@ -195,12 +195,15 @@ namespace BookmakerParser
                                 result = new ResultBet(ResultBetType.SecondOrDraw, time, Probability, matchName, BetUrl, JavaSelectCode, sport, Maker);
                             }
                         }
-                        // we have totals for just all game and including ALL OT . What do we need? and the same for handicap. idk ask it at godLikeCoder.
-                        // also we have totals for whole game(All game). 
                         // importantly!!!!
                         // You have to see it.
                         if ((maintype.Contains("Total") || maintype.Contains("total")) && (!maintype.Contains("aggregated") && !maintype.Contains("Totals")))
                         {
+                            if (sport == Sport.Basketball &&
+                             (!maintype.Contains("including overtime") && !maintype.Contains("Including overtime") && !maintype.Contains("including Overtime")))
+                                continue;
+                            // перевірити правильність написання including overtime(регістр)
+
                             if (type.Contains("Under"))
                             {
                                 try
@@ -219,8 +222,13 @@ namespace BookmakerParser
                                 result = new TotalBet(TotalBetType.Over, param, time, team, Probability, matchName, BetUrl, JavaSelectCode, sport, Maker);
                             }
                         }
-                        if (maintype.Contains("Handicap") && maintype.Contains("Asian"))
+                        if ((maintype.Contains("Handicap") || maintype.Contains("handicap")) && maintype.Contains("Asian"))
                         {
+                            if (sport == Sport.Basketball &&
+                             (!maintype.Contains("inc. ОТ") && !maintype.Contains("Inc. OT") && !maintype.Contains("INC. OT") && !maintype.Contains("including overtime")))
+                                continue;
+
+                            // перевірити правильність написання including overtime(регістр)
                             string first_or_second_team = type.Split(new string[] { " (" }, StringSplitOptions.RemoveEmptyEntries)[0];
                             if (first_or_second_team == "1")
                             {
@@ -238,6 +246,8 @@ namespace BookmakerParser
                         else
                         if (maintype.Contains("Handicap") && !maintype.Contains("Asian"))
                         {
+                            // коли буде матч переглянути як тут пишуть INC.OT. 
+
                             string first_or_second_team = type.Split(new string[] { " (" }, StringSplitOptions.RemoveEmptyEntries)[0];
                             if (first_or_second_team == "1")
                             {
@@ -276,6 +286,10 @@ namespace BookmakerParser
                         else
                         if (maintype.Contains("Draw No Bet"))
                         {
+                            if (sport == Sport.Basketball &&
+                             (!maintype.Contains("inc. ОТ") && !maintype.Contains("Inc. OT") && !maintype.Contains("INC. OT") && !maintype.Contains("including overtime")))
+                                continue;
+
                             double param = 0;
                             if (type.Contains("1"))
                             {
@@ -298,6 +312,7 @@ namespace BookmakerParser
                             else
                                 BetList.Add(result);
                         }
+
                     }
 
                 }
